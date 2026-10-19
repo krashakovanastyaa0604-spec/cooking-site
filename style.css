@@ -194,15 +194,14 @@ body {
     
     .image-container {
     position: relative;
-    width: 550px; /* Сделали больше (было 450px) */
-    height: 550px; /* Сделали больше (было 450px) */
+    width: 550px;
+    height: 550px;
     display: flex;
     justify-content: center;
     align-items: center;
-    /* Сдвигаем картинку вверх, чтобы она наехала на текст */
     margin-top: -120px; 
     margin-bottom: 20px;
-    z-index: 5; /* Гарантируем, что картинка будет поверх текста */
+    z-index: 5;
     }
     }
     .description {
