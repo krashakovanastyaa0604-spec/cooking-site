@@ -97,7 +97,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 20px;
+    padding-bottom: 50px; /* Добавили отступ от самого низа экрана */
 }
 
 .hero-content {
@@ -107,35 +107,36 @@ body {
     text-align: center;
     max-width: 800px;
     width: 100%;
-    margin-top: -50px; /* Чуть поднимаем контент на ПК */
 }
 
 .title {
-    font-size: 90px; /* Огромный заголовок для ПК */
+    font-size: 110px; 
     font-weight: 900;
-    line-height: 1.0;
-    margin-bottom: 10px;
-    z-index: 2;
+    line-height: 0.9; 
+    margin: 0;
+    z-index: 1; 
     letter-spacing: 2px;
 }
 
 /* Контейнер для картинки */
 .image-container {
     position: relative;
-    width: 450px; /* Большая картинка для ПК */
-    height: 450px;
+    width: 600px; 
+    height: 350px; 
     display: flex;
     justify-content: center;
-    align-items: center;
-    margin: -20px 0 20px 0;
+    align-items: flex-start; 
+    margin-top: -130px; /* Было -200px, теперь логотип опустится и наедет только на низ текста */
+    margin-bottom: 10px; /* Уменьшили отступ снизу */
+    z-index: 5; 
 }
 
 .logo-img {
-    width: 100%;
+    width: 100%; 
     height: auto;
     position: relative;
     z-index: 2;
-    filter: drop-shadow(0px 0px 50px rgba(255, 255, 255, 0.2)); /* Красивое свечение */
+    filter: drop-shadow(0px 0px 60px rgba(255, 255, 255, 0.3)); 
 }
 
 .glow-img {
@@ -149,10 +150,11 @@ body {
 }
 
 .description {
-    font-size: 20px; /* Крупный текст описания */
+    font-size: 20px;
     color: #b0b0d0;
-    line-height: 1.6;
-    margin-bottom: 40px;
+    line-height: 1.4;
+    margin-top: 0px; /* Текст описания вплотную к картинке */
+    margin-bottom: 40px; /* Отступ от описания до кнопки */
     max-width: 650px;
     z-index: 2;
 }
@@ -165,7 +167,7 @@ body {
     text-decoration: none;
     font-size: 24px;
     font-weight: 700;
-    padding: 25px 80px;
+    padding: 20px 80px; 
     border-radius: 20px;
     border: 2px solid #5a32a3;
     box-shadow: 0 0 20px rgba(90, 50, 163, 0.4);
@@ -173,7 +175,6 @@ body {
     width: 100%;
     max-width: 500px;
 }
-
 .main-btn:hover {
     background: linear-gradient(135deg, #2a1468, #1c0e45);
     box-shadow: 0 0 35px rgba(90, 50, 163, 0.8);
@@ -189,7 +190,13 @@ body {
     }
     
     .title {
-        font-size: 55px;
+    font-size: 90px;
+    font-weight: 900;
+    line-height: 1.0;
+    margin-bottom: 0px; /* Убрали отступ снизу */
+    z-index: 1; /* Текст теперь ПОД картинкой */
+    letter-spacing: 2px;
+    position: relative;
     }
     
     .image-container {
@@ -225,4 +232,4 @@ body {
         width: 55px;
         height: 45px;
     }
-}
+ 
