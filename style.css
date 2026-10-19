@@ -1,47 +1,37 @@
-/* Сброс стандартных отступов */
+/* =========================================
+   БАЗОВЫЕ СТИЛИ (Для ПК / Больших экранов)
+   ========================================= */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Темно-синий фон с легким градиентом */
 body {
-    background: radial-gradient(circle at center, #15174d 0%, #060826 100%);
-    color: white;
+    background: radial-gradient(circle at center, #13143b 0%, #090a1f 100%);
+    color: #ffffff;
     min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-/* Контейнер для мобильного вида (как на скриншоте) */
-.mobile-container {
-    width: 100%;
-    max-width: 430px; /* Ширина типичного экрана телефона */
-    min-height: 100vh;
-    padding: 20px;
     display: flex;
     flex-direction: column;
-    position: relative;
+    overflow-x: hidden;
 }
 
-/* Верхняя панель (Бургер и Кнопки входа) */
-.top-bar {
+/* --- Шапка сайта --- */
+.header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 40px;
+    padding: 40px 60px; /* Большие отступы для ПК */
 }
 
-/* Кнопка-бургер (три полоски) */
-.burger-menu {
-    background-color: transparent;
-    border: 1px solid #4a4c8c;
-    border-radius: 12px;
-    width: 50px;
-    height: 50px;
+/* Кнопка меню (бургер) */
+.menu-btn {
+    background: linear-gradient(135deg, #3d1e7c, #221154);
+    border: 1px solid #5a32a3;
+    border-radius: 14px;
+    width: 70px;
+    height: 60px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -51,130 +41,181 @@ body {
     transition: 0.3s;
 }
 
-.burger-menu:hover {
-    background-color: rgba(74, 76, 140, 0.3);
+.menu-btn:hover {
+    border-color: #8c65d6;
 }
 
-.burger-menu span {
+.menu-btn span {
     display: block;
-    width: 24px;
-    height: 2px;
-    background-color: white;
+    width: 30px;
+    height: 4px;
+    background-color: #ffffff;
     border-radius: 2px;
 }
 
-/* Группа кнопок справа */
+/* Кнопки авторизации */
 .auth-buttons {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     align-items: flex-end;
 }
 
-.btn {
-    padding: 10px 20px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    width: 120px;
+.btn-outline, .btn-filled {
+    text-decoration: none;
+    color: #ffffff;
+    padding: 10px 30px;
+    border-radius: 25px;
+    font-size: 18px;
+    text-align: center;
+    width: 140px;
+    transition: 0.3s;
 }
 
-.btn-signin {
+.btn-outline {
     background: transparent;
-    color: white;
-    border: 1px solid #4a4c8c;
+    border: 1px solid #5a32a3;
 }
 
-.btn-signin:hover {
-    background: rgba(74, 76, 140, 0.3);
+.btn-outline:hover {
+    background: rgba(90, 50, 163, 0.3);
 }
 
-.btn-signup {
-    background: #a0a0c0;
-    color: #15174d;
-    border: none;
+.btn-filled {
+    background: #7f8494;
+    border: 1px solid #7f8494;
+    color: #e0e0e0;
 }
 
-.btn-signup:hover {
-    background: #ffffff;
+.btn-filled:hover {
+    background: #969bb0;
 }
 
-/* Центральная часть (Заголовок и Картинка) */
-.main-content {
+/* --- Основной блок (Hero) --- */
+.hero {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.hero-content {
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    flex-grow: 1;
-    justify-content: center;
+    max-width: 800px;
+    width: 100%;
+    margin-top: -50px; /* Чуть поднимаем контент на ПК */
 }
 
-h1 {
-    font-size: 48px;
-    line-height: 1.1;
-    font-weight: 800;
-    margin-bottom: 30px;
-    letter-spacing: 1px;
+.title {
+    font-size: 90px; /* Огромный заголовок для ПК */
+    font-weight: 900;
+    line-height: 1.0;
+    margin-bottom: 10px;
+    z-index: 2;
+    letter-spacing: 2px;
 }
 
-/* Блок для картинки */
-.image-wrapper {
+/* Контейнер для картинки */
+.image-container {
     position: relative;
-    width: 280px;
-    height: 280px;
+    width: 450px; /* Большая картинка для ПК */
+    height: 450px;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 30px;
+    margin: -20px 0 20px 0;
 }
 
-/* Свечение позади картинки */
-.glow-effect {
-    position: absolute;
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle, rgba(255, 180, 100, 0.2) 0%, rgba(255, 180, 100, 0) 70%);
-    border-radius: 50%;
-    z-index: 1;
-}
-
-/* Стили для картинки (вилки) */
-.main-image {
+.logo-img {
     width: 100%;
     height: auto;
+    position: relative;
     z-index: 2;
-    filter: drop-shadow(0px 10px 20px rgba(0,0,0,0.5));
+    filter: drop-shadow(0px 0px 50px rgba(255, 255, 255, 0.2)); /* Красивое свечение */
 }
 
-/* Текст описания */
+.glow-img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 150%;
+    z-index: 1;
+    opacity: 0.8;
+}
+
 .description {
+    font-size: 20px; /* Крупный текст описания */
     color: #b0b0d0;
-    font-size: 14px;
-    line-height: 1.5;
-    padding: 0 10px;
-    margin-bottom: 50px;
+    line-height: 1.6;
+    margin-bottom: 40px;
+    max-width: 650px;
+    z-index: 2;
 }
 
-/* Большая кнопка внизу */
-.btn-start {
-    width: 100%;
-    padding: 20px;
-    background: linear-gradient(180deg, #15174d 0%, #0a0c2e 100%);
-    border: 1px solid #4a4c8c;
-    color: white;
-    font-size: 18px;
+/* Главная кнопка */
+.main-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #1c0e45, #12072e);
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 24px;
     font-weight: 700;
-    border-radius: 16px;
-    cursor: pointer;
-    letter-spacing: 1px;
+    padding: 25px 80px;
+    border-radius: 20px;
+    border: 2px solid #5a32a3;
+    box-shadow: 0 0 20px rgba(90, 50, 163, 0.4);
     transition: 0.3s;
-    margin-top: auto;
+    width: 100%;
+    max-width: 500px;
 }
 
-.btn-start:hover {
-    background: #1e2166;
-    border-color: #7a7ce0;
-    box-shadow: 0 0 15px rgba(122, 124, 224, 0.3);
+.main-btn:hover {
+    background: linear-gradient(135deg, #2a1468, #1c0e45);
+    box-shadow: 0 0 35px rgba(90, 50, 163, 0.8);
+    transform: translateY(-3px);
+}
+
+/* =========================================
+   АДАПТАЦИЯ ПОД МОБИЛЬНЫЕ (Если зайдут с телефона)
+   ========================================= */
+@media (max-width: 768px) {
+    .header {
+        padding: 20px;
+    }
+    
+    .title {
+        font-size: 55px;
+    }
+    
+    .image-container {
+        width: 280px;
+        height: 280px;
+        margin: 10px 0;
+    }
+    .description {
+        font-size: 16px;
+        padding: 0 15px;
+    }
+
+    .main-btn {
+        font-size: 18px;
+        padding: 18px 40px;
+        max-width: 90%;
+    }
+    
+    .btn-outline, .btn-filled {
+        padding: 8px 15px;
+        width: 110px;
+        font-size: 14px;
+    }
+    
+    .menu-btn {
+        width: 55px;
+        height: 45px;
+    }
 }
