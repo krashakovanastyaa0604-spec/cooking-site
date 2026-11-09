@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Рецептория</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Шапка → блок с 3D-блюдом → подбор по продуктам → каталог карточек; рецепт открывается в окне с 3D-моделью */
+  --bg:#eef0ea; --surface:#ffffff; --surface-2:#e3e8df; --ink:#18201b; --muted:#56625a; --line:#d3dacf;
+  --accent:#e3a127; --accent-ink:#2a1c00; --basil:#2c6a4a; --basil-ink:#ffffff; --danger:#c8352b;
+  --display:"Unbounded","Arial Black",system-ui,sans-serif; --body:"Manrope","Segoe UI",Arial,sans-serif;
+  --r:16px; --shadow:0 1px 2px rgba(20,30,24,.06),0 8px 24px rgba(20,30,24,.07);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111512; --surface:#191f1b; --surface-2:#222a24; --ink:#edf1eb; --muted:#9ba79e; --line:#2d3730;
+  --accent:#f0b443; --accent-ink:#241700; --basil:#62b58b; --basil-ink:#0b1a12; --danger:#ee6a5f;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25); color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#111512; --surface:#191f1b; --surface-2:#222a24; --ink:#edf1eb; --muted:#9ba79e; --line:#2d3730;
+  --accent:#f0b443; --accent-ink:#241700; --basil:#62b58b; --basil-ink:#0b1a12; --danger:#ee6a5f;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25); color-scheme:dark;}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--body);-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);font-weight:700;line-height:1.15;text-wrap:balance;margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:8px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 20px}
+img{max-width:100%}
+
+/* шапка */
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:20px;height:64px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:19px;text-decoration:none;color:var(--ink)}
+.logo-mark{width:30px;height:30px;border-radius:50%;background:conic-gradient(from 200deg,var(--accent),#d8432f,var(--basil),var(--accent));box-shadow:inset 0 0 0 6px var(--surface)}
+.nav{display:flex;gap:4px;margin-left:auto}
+.nav a{padding:8px 12px;border-radius:10px;text-decoration:none;color:var(--muted);font-weight:600;font-size:15px}
+.nav a:hover{color:var(--ink);background:var(--surface-2)}
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:12px;padding:11px 18px;font-weight:700;cursor:pointer;background:var(--basil);color:var(--basil-ink);text-decoration:none}
+.btn:hover{filter:brightness(1.07)}
+.btn.ghost{background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.btn.ghost:hover{background:var(--surface-2);filter:none}
+.btn.sm{padding:7px 12px;font-size:14px;border-radius:10px}
+
+/* первый экран */
+.hero{padding:40px 0 28px}
+.hero .wrap{display:grid;grid-template-columns:1fr 1.15fr;gap:36px;align-items:center}
+.eyebrow{display:inline-block;font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--basil);margin-bottom:14px}
+.hero h1{font-size:clamp(30px,4.2vw,50px);margin-bottom:16px}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.lead{color:var(--muted);font-size:18px;max-width:52ch;margin:0 0 24px}
+.search{display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:14px;padding:6px 6px 6px 16px;box-shadow:var(--shadow),inset 0 0 0 1px var(--line);max-width:560px}
+.search svg{flex:none;color:var(--muted)}
+.search input{flex:1;border:0;background:transparent;padding:10px 0;font-size:17px;min-width:0}
+.search input:focus{outline:none}
+.search:focus-within{box-shadow:var(--shadow),inset 0 0 0 2px var(--accent)}
+.quick{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;align-items:center}
+.quick span{color:var(--muted);font-size:14px;margin-right:2px}
+.tag{border:0;background:var(--surface-2);color:var(--ink);padding:6px 12px;border-radius:999px;font-size:14px;font-weight:600;cursor:pointer}
+.tag:hover{background:color-mix(in srgb,var(--accent) 25%,var(--surface-2))}
+.stats{display:flex;gap:28px;margin-top:28px}
+.stats b{display:block;font-family:var(--display);font-size:26px;font-variant-numeric:tabular-nums}
+.stats span{color:var(--muted);font-size:14px}
+
+.stage{position:relative;border-radius:24px;background:radial-gradient(120% 90% at 50% 30%,color-mix(in srgb,var(--accent) 22%,var(--surface)) 0%,var(--surface) 60%);box-shadow:var(--shadow),inset 0 0 0 1px var(--line);overflow:hidden}
+.stage canvas{display:block;width:100%;height:520px;cursor:grab;touch-action:pan-y;opacity:0;transition:opacity .8s ease}
+.stage.ready canvas{opacity:1}
+.stage.no3d canvas{display:none}
+.stage #heroFallback{margin:60px 20px}
+.stage canvas.grabbing{cursor:grabbing}
+.stage-info{position:absolute;left:18px;top:16px;right:18px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;pointer-events:none}
+.stage-info .name{font-family:var(--display);font-size:18px}
+.stage-info .sub{color:var(--muted);font-size:14px}
+.hint{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);background:var(--surface);padding:5px 10px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--line);white-space:nowrap}
+.stage-bar{display:flex;gap:8px;align-items:center;padding:12px 14px;border-top:1px solid var(--line);background:var(--surface);overflow-x:auto}
+.stage-bar .pick{border:0;background:transparent;padding:7px 12px;border-radius:10px;font-weight:600;font-size:14px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.stage-bar .pick[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.stage-note{color:var(--muted);font-size:14px;margin-right:auto}
+.stage-bar .btn{flex:none}
+
+/* секции */
+section.block{padding:28px 0}
+.sec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.sec-head h2{font-size:clamp(22px,2.6vw,30px)}
+.sec-head p{margin:6px 0 0;color:var(--muted);max-width:60ch}
+
+.pantry{background:var(--surface);border-radius:var(--r);padding:20px;box-shadow:var(--shadow),inset 0 0 0 1px var(--line)}
+.pantry-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.field{display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:12px;padding:0 12px;box-shadow:inset 0 0 0 1px var(--line);flex:1;min-width:220px}
+.field input{border:0;background:transparent;padding:11px 0;width:100%}
+.field input:focus{outline:none}
+.field:focus-within{box-shadow:inset 0 0 0 2px var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:0;background:var(--bg);box-shadow:inset 0 0 0 1px var(--line);padding:7px 13px;border-radius:999px;font-size:14px;font-weight:600;cursor:pointer;color:var(--ink)}
+.chip:hover{box-shadow:inset 0 0 0 1px var(--muted)}
+.chip[aria-pressed="true"]{background:var(--basil);color:var(--basil-ink);box-shadow:none}
+.chip[aria-pressed="true"]::before{content:"✓ "}
+.pantry-note{margin:14px 0 0;color:var(--muted);font-size:14px}
+.pantry-note b{color:var(--ink)}
+
+/* каталог */
+.toolbar{display:flex;flex-direction:column;gap:12px;margin-bottom:18px}
+.cats{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.cats button{flex:none;border:0;background:transparent;padding:8px 14px;border-radius:10px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.cats button:hover{color:var(--ink);background:var(--surface-2)}
+.cats button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.cats button small{opacity:.65;font-weight:500;margin-left:4px;font-variant-numeric:tabular-nums}
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.filters .field{flex:2;min-width:220px;background:var(--surface)}
+select{appearance:none;background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2378847b' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 12px center;border:0;border-radius:12px;padding:11px 34px 11px 14px;box-shadow:inset 0 0 0 1px var(--line);cursor:pointer;font-weight:600;font-size:15px}
+.fav-toggle[aria-pressed="true"]{background:var(--danger);color:#fff;box-shadow:none}
+.count{color:var(--muted);font-size:14px;margin:0}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px}
+.card{position:relative;background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow),inset 0 0 0 1px var(--line);overflow:hidden;display:flex;flex-direction:column;transition:transform .18s ease,box-shadow .18s ease}
+.card:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(20,30,24,.12),inset 0 0 0 1px var(--line)}
+.card-open{all:unset;cursor:pointer;display:flex;flex-direction:column;height:100%}
+.card-open:focus-visible{outline:3px solid var(--accent);outline-offset:-3px;border-radius:var(--r)}
+.thumb{position:relative;aspect-ratio:16/9;background:radial-gradient(90% 120% at 85% 110%,color-mix(in srgb,var(--tint) 55%,transparent) 0%,transparent 60%),linear-gradient(135deg,color-mix(in srgb,var(--tint) 22%,var(--surface)) 0%,color-mix(in srgb,var(--tint) 38%,var(--surface)) 100%);overflow:hidden}
+.thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .3s}
+.thumb img.ready{opacity:1}
+.thumb .ph{position:absolute;right:14px;bottom:-22px;font-family:var(--display);font-size:110px;line-height:1;color:color-mix(in srgb,var(--tint) 70%,var(--surface));opacity:.55}
+.thumb img.ready + .ph{display:none}
+.pill{position:absolute;left:12px;top:12px;background:var(--surface);padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;box-shadow:inset 0 0 0 1px var(--line)}
+.card-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
+.card h3{font-size:16px;line-height:1.25}
+.card .cuisine{color:var(--muted);font-size:14px;margin:0}
+.facts{display:flex;gap:14px;flex-wrap:wrap;margin-top:auto;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.facts span{display:inline-flex;align-items:center;gap:5px}
+.diff{display:inline-flex;gap:2px}
+.diff i{width:6px;height:12px;border-radius:2px;background:var(--line)}
+.diff i.on{background:var(--accent)}
+.match{font-size:13px;font-weight:600}
+.match .bar{height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden;margin-top:5px}
+.match .bar i{display:block;height:100%;background:var(--basil)}
+.match small{display:block;color:var(--muted);font-weight:500;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fav{position:absolute;right:10px;top:10px;width:36px;height:36px;border-radius:50%;border:0;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);display:grid;place-items:center;cursor:pointer;color:var(--muted)}
+.fav[aria-pressed="true"]{color:var(--danger)}
+.fav[aria-pressed="true"] svg path{fill:currentColor}
+.empty{grid-column:1/-1;text-align:center;padding:48px 20px;background:var(--surface);border-radius:var(--r);box-shadow:inset 0 0 0 1px var(--line)}
+.empty p{color:var(--muted)}
+.more{display:flex;justify-content:center;margin-top:22px}
+
+/* окно рецепта */
+dialog{border:0;padding:0;border-radius:22px;width:min(760px,calc(100% - 32px));max-height:calc(100% - 32px);background:var(--surface);color:var(--ink);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden}
+dialog::backdrop{background:rgba(10,16,12,.55);backdrop-filter:blur(3px)}
+.dlg{display:flex;flex-direction:column;max-height:calc(100vh - 32px)}
+.dlg-band{flex:none;height:96px;position:relative;overflow:hidden;background:linear-gradient(135deg,color-mix(in srgb,var(--tint) 30%,var(--surface)),color-mix(in srgb,var(--tint) 60%,var(--surface)))}
+.dlg-band span{position:absolute;right:24px;bottom:-34px;font-family:var(--display);font-size:140px;line-height:1;color:var(--surface);opacity:.45}
+.dlg-3d{position:relative;background:radial-gradient(120% 90% at 50% 35%,color-mix(in srgb,var(--accent) 20%,var(--surface)) 0%,var(--surface-2) 75%);display:flex;flex-direction:column}
+.dlg-3d canvas{flex:1;width:100%;min-height:0;display:block;cursor:grab;touch-action:none}
+.dlg-3d canvas.grabbing{cursor:grabbing}
+.dlg-3d .ctrl{position:absolute;left:14px;bottom:14px;right:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.dlg-3d .ctrl .hint{margin-left:auto}
+.dlg-body{overflow-y:auto;padding:26px 28px 28px}
+.dlg-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.crumbs{color:var(--muted);font-size:14px;font-weight:600}
+.dlg-body h2{font-size:clamp(22px,2.6vw,30px);margin:6px 0 16px}
+.icon-btn{width:40px;height:40px;flex:none;border-radius:12px;border:0;background:var(--surface-2);display:grid;place-items:center;cursor:pointer;color:var(--ink)}
+.icon-btn:hover{filter:brightness(.96)}
+.icon-btn[aria-pressed="true"]{color:var(--danger)}
+.icon-btn[aria-pressed="true"] svg path{fill:currentColor}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px}
+.kpi{background:var(--bg);border-radius:14px;padding:10px 12px}
+.kpi small{display:block;color:var(--muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.kpi b{font-size:17px;font-variant-numeric:tabular-nums}
+.serv{display:flex;align-items:center;gap:8px}
+.serv button{width:26px;height:26px;border-radius:8px;border:0;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);cursor:pointer;font-weight:700;line-height:1}
+.dlg-body h3{font-size:17px;margin:0 0 10px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ing{list-style:none;margin:0 0 24px;padding:0;border-top:1px solid var(--line)}
+.ing li{display:flex;gap:10px;align-items:center;padding:9px 2px;border-bottom:1px solid var(--line)}
+.ing label{flex:1;display:flex;gap:10px;align-items:center;cursor:pointer}
+.ing input{width:18px;height:18px;accent-color:var(--basil)}
+.ing .q{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ing .have{font-size:12px;font-weight:700;color:var(--basil);background:color-mix(in srgb,var(--basil) 14%,transparent);padding:2px 8px;border-radius:999px}
+.ing li.done label span:first-of-type{text-decoration:line-through;color:var(--muted)}
+.steps{list-style:none;margin:0;padding:0;counter-reset:s}
+.steps li{counter-increment:s;display:grid;grid-template-columns:34px 1fr;gap:12px;padding:12px 10px;border-radius:12px;cursor:pointer}
+.steps li:hover{background:var(--bg)}
+.steps li::before{content:counter(s);width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;background:var(--accent);color:var(--accent-ink)}
+.steps li.done{color:var(--muted)}
+.steps li.done::before{content:"✓";background:var(--basil);color:var(--basil-ink)}
+.dlg-nav{display:flex;justify-content:space-between;gap:10px;margin-top:24px;padding-top:18px;border-top:1px solid var(--line)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:100}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+footer{border-top:1px solid var(--line);margin-top:40px;padding:26px 0 40px;color:var(--muted);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media (max-width:900px){
+  .hero .wrap{grid-template-columns:1fr}
+  .stage canvas{height:380px}
+  .nav{display:none}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:420px){.wrap{padding:0 16px}.stats{gap:18px}.dlg-body{padding:20px 18px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#top"><span class="logo-mark" aria-hidden="true"></span>Рецептория</a>
+    <nav class="nav" aria-label="Разделы">
+      <a href="#pantry">Подбор по продуктам</a>
+      <a href="#catalog">Все рецепты</a>
+    </nav>
+    <button class="btn sm" id="randomBtn" type="button">Случайный рецепт</button>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <span class="eyebrow">Кулинарная книга в 3D</span>
+        <h1>Найдите рецепт <em>любого</em> блюда и рассмотрите его со всех сторон</h1>
+        <p class="lead">Супы, паста, выпечка, роллы и десерты с точными граммовками. Укажите, что лежит в холодильнике, и мы покажем, что из этого приготовить.</p>
+        <label class="search" for="heroSearch">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input id="heroSearch" type="search" placeholder="Блюдо или продукт: борщ, курица, творог…" autocomplete="off">
+          <button class="btn" type="button" id="heroGo">Найти</button>
+        </label>
+        <div class="quick" id="quick"><span>Часто ищут:</span></div>
+        <div class="stats" id="stats"></div>
+      </div>
+      <div class="stage" id="heroStage">
+        <canvas id="heroCanvas" tabindex="0" aria-label="3D-модель пиццы Маргарита. Перетаскивайте мышью или стрелками, чтобы повернуть"></canvas>
+        <p class="empty" id="heroFallback" hidden>Ваш браузер не смог показать 3D-сцену. Рецепты при этом работают.</p>
+        <div class="stage-info">
+          <div><div class="name">Пицца Маргарита</div><div class="sub" id="heroSub"></div></div>
+          <span class="hint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"/></svg>Тяните, чтобы повернуть</span>
+        </div>
+        <div class="stage-bar">
+          <span class="stage-note">Томаты, моцарелла и базилик на тонком тесте</span>
+          <button class="btn ghost sm" type="button" id="heroReset">Сбросить вид</button>
+          <button class="btn sm" type="button" id="heroOpen">Открыть рецепт</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="pantry">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <h2>Что есть в холодильнике?</h2>
+          <p>Отметьте продукты, которые у вас есть. Каталог ниже отсортируется: сначала блюда, для которых почти ничего не нужно докупать. Соль, сахар, воду и растительное масло считаем всегда доступными.</p>
+        </div>
+      </div>
+      <div class="pantry">
+        <div class="pantry-row">
+          <label class="field" for="pantryInput">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            <input id="pantryInput" list="ingList" placeholder="Добавить продукт, например «кабачок»" autocomplete="off">
+          </label>
+          <button class="btn" id="pantryAdd" type="button">Добавить</button>
+          <button class="btn ghost" id="pantryClear" type="button">Очистить</button>
+        </div>
+        <datalist id="ingList"></datalist>
+        <div class="chips" id="pantryChips"></div>
+        <p class="pantry-note" id="pantryNote"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="catalog">
+    <div class="wrap">
+      <div class="sec-head"><div><h2>Все рецепты</h2></div><p class="count" id="count" aria-live="polite"></p></div>
+      <div class="toolbar">
+        <div class="cats" id="cats" role="group" aria-label="Категории"></div>
+        <div class="filters">
+          <label class="field" for="q">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+            <input id="q" type="search" placeholder="Поиск по названию или продукту" autocomplete="off">
+          </label>
+          <select id="cuisine" aria-label="Кухня"></select>
+          <select id="time" aria-label="Время приготовления">
+            <option value="0">Любое время</option><option value="15">До 15 минут</option><option value="30">До 30 минут</option><option value="60">До часа</option><option value="120">До 2 часов</option>
+          </select>
+          <select id="diff" aria-label="Сложность">
+            <option value="0">Любая сложность</option><option value="1">Просто</option><option value="2">Средне</option><option value="3">Сложно</option>
+          </select>
+          <select id="sort" aria-label="Сортировка">
+            <option value="pop">Сначала популярные</option><option value="time">Быстрее всего</option><option value="kcal">Меньше калорий</option><option value="az">По алфавиту</option>
+          </select>
+          <button class="btn ghost fav-toggle" id="favOnly" type="button" aria-pressed="false">
+            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.5-9.3C1 8.2 3.4 4.5 7 4.5c2 0 3.4 1.1 5 3 1.6-1.9 3-3 5-3 3.6 0 6 3.7 4.5 7.2C19.5 16.4 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            Избранное
+          </button>
+        </div>
+      </div>
+      <div class="grid" id="grid"></div>
+      <div class="more"><button class="btn ghost" id="moreBtn" type="button" hidden>Показать ещё</button></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Рецептория · рецепты и 3D-модели блюд</span>
+    <span>Калорийность указана примерно, на одну порцию</span>
+  </div>
+</footer>
+
+<dialog id="dlg" aria-labelledby="dName">
+  <div class="dlg">
+    <div class="dlg-band" id="dBand"><span id="dLetter" aria-hidden="true"></span></div>
+    <div class="dlg-body" id="dBody">
+      <div class="dlg-top">
+        <div class="crumbs" id="dCrumbs"></div>
+        <div style="display:flex;gap:8px">
+          <button class="icon-btn" id="dFav" type="button" aria-pressed="false" aria-label="В избранное"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.5-9.3C1 8.2 3.4 4.5 7 4.5c2 0 3.4 1.1 5 3 1.6-1.9 3-3 5-3 3.6 0 6 3.7 4.5 7.2C19.5 16.4 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+          <button class="icon-btn" id="dClose" type="button" aria-label="Закрыть"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        </div>
+      </div>
+      <h2 id="dName"></h2>
+      <div class="kpis" id="dKpis"></div>
+      <h3>Ингредиенты <button class="btn ghost sm" id="dCopy" type="button">Скопировать список</button></h3>
+      <ul class="ing" id="dIng"></ul>
+      <h3>Приготовление <span class="count" id="dProgress"></span></h3>
+      <ol class="steps" id="dSteps"></ol>
+      <div class="dlg-nav">
+        <button class="btn ghost" id="dPrev" type="button">← Предыдущий</button>
+        <button class="btn ghost" id="dNext" type="button">Следующий →</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// [название, категория, кухня, минуты, сложность 1-3, порций, ккал на порцию, 3D-модель, параметры модели, ингредиенты, шаги]
+const RAW = [
+["Борщ","Супы","Украинская",150,2,6,230,"soup",{c:"#9b1f2c",cream:1,b:[["beet","stick",8,.16],["pot","cube",6,.15],["g1","leaf",5,.14]]},
+"Говядина=600 г;Свёкла=2 шт;Капуста белокочанная=300 г;Картофель=4 шт;Морковь=1 шт;Лук=1 шт;Томатная паста=2 ст. л.;Чеснок=3 зуб.;Уксус 9%=1 ч. л.;Сметана=по вкусу;Соль=по вкусу",
+"Залейте говядину 3 л воды, доведите до кипения, снимите пену и варите 1,5 часа.|Натрите свёклу и потушите её 15 минут с томатной пастой и уксусом.|Обжарьте лук и морковь на масле до мягкости.|Достаньте мясо, нарежьте и верните в бульон. Добавьте картофель, через 10 минут — нашинкованную капусту.|Положите зажарку и свёклу, варите ещё 10 минут.|Добавьте чеснок, посолите и дайте борщу настояться 20 минут. Подавайте со сметаной."],
+["Щи из свежей капусты","Супы","Русская",90,1,6,120,"soup",{c:"#c9a34a",b:[["#dfe6b8","shred",12,.2],["pot","cube",5,.15],["car","disc",5,.12],["dill","leaf",6,.1]]},
+"Говядина=500 г;Капуста белокочанная=500 г;Картофель=3 шт;Морковь=1 шт;Лук=1 шт;Помидоры=2 шт;Лавровый лист=2 шт;Укроп=1 пуч.;Соль=по вкусу",
+"Сварите бульон из говядины, около часа.|Нашинкуйте капусту, картофель нарежьте кубиками.|Обжарьте лук, морковь и помидоры 7 минут.|Положите в бульон картофель и капусту, варите 15 минут.|Добавьте зажарку и лавровый лист, варите ещё 5 минут. Посыпьте укропом."],
+["Солянка сборная мясная","Супы","Русская",90,2,6,280,"soup",{c:"#b5562a",cream:1,b:[["olv","ball",6,.14],["#c8604a","stick",8,.16],["g1","cube",5,.12],["yel","disc",1,.5]]},
+"Говядина=400 г;Копчёная колбаса=200 г;Сосиски=4 шт;Солёные огурцы=3 шт;Лук=1 шт;Томатная паста=3 ст. л.;Маслины=100 г;Лимон=0.5 шт;Каперсы=1 ст. л.;Соль=по вкусу",
+"Сварите говяжий бульон, мясо нарежьте.|Нарежьте колбасу и сосиски соломкой и слегка обжарьте.|Обжарьте лук с томатной пастой, добавьте нарезанные огурцы и тушите 5 минут.|Соедините всё в бульоне, добавьте маслины и каперсы, варите 10 минут.|Подавайте с долькой лимона и сметаной."],
+["Куриный суп с лапшой","Супы","Русская",60,1,6,150,"soup",{c:"#e6c35a",b:[["car","disc",8,.14],["#f3e3b0","stick",12,.18],["dill","leaf",6,.1]]},
+"Курица=800 г;Лапша=150 г;Картофель=3 шт;Морковь=1 шт;Лук=1 шт;Зелень=1 пуч.;Лавровый лист=1 шт;Соль=по вкусу",
+"Залейте курицу 2,5 л воды и варите 40 минут, снимая пену.|Достаньте курицу и отделите мясо от костей.|Положите в бульон картофель, морковь и целую луковицу, варите 10 минут.|Добавьте лапшу и мясо, варите до готовности лапши, около 5 минут.|Уберите луковицу и посыпьте суп зеленью."],
+["Грибной крем-суп","Супы","Французская",40,1,4,210,"soup",{c:"#c9a983",cream:1,b:[["mush","half",4,.24],["dill","leaf",4,.1]]},
+"Шампиньоны=500 г;Картофель=2 шт;Лук=1 шт;Сливки 20%=200 мл;Сливочное масло=30 г;Чеснок=2 зуб.;Соль=по вкусу",
+"Обжарьте лук и чеснок на сливочном масле.|Добавьте нарезанные грибы и жарьте 10 минут.|Залейте 600 мл воды, положите картофель и варите 15 минут.|Измельчите суп блендером до однородности.|Влейте сливки, прогрейте, не доводя до кипения, и посолите."],
+["Тыквенный крем-суп","Супы","Европейская",45,1,4,180,"soup",{c:"#e9852a",cream:1,b:[["#5d7a33","grain",12,.13]]},
+"Тыква=700 г;Морковь=1 шт;Лук=1 шт;Сливки 20%=150 мл;Чеснок=2 зуб.;Имбирь=1 ч. л.;Тыквенные семечки=2 ст. л.;Соль=по вкусу",
+"Нарежьте тыкву, морковь и лук кубиками.|Обжарьте лук с чесноком и имбирём 3 минуты.|Добавьте тыкву и морковь, залейте водой так, чтобы она едва покрывала овощи, варите 20 минут.|Пробейте блендером, влейте сливки и прогрейте.|Подавайте с поджаренными семечками."],
+["Том ям","Супы","Тайская",40,2,4,190,"soup",{c:"#e86a2c",b:[["pink","shrimp",6,.32],["mush","half",4,.2],["red","ball",4,.18],["g2","leaf",5,.12]]},
+"Креветки=300 г;Шампиньоны=200 г;Кокосовое молоко=400 мл;Паста том ям=2 ст. л.;Лайм=1 шт;Помидоры черри=8 шт;Кинза=1 пуч.;Рыбный соус=1 ст. л.",
+"Доведите до кипения 600 мл воды и растворите в ней пасту том ям.|Добавьте нарезанные грибы и половинки черри, варите 5 минут.|Влейте кокосовое молоко и рыбный соус.|Положите очищенные креветки и варите 2–3 минуты.|Выжмите сок лайма и посыпьте кинзой."],
+["Мисо-суп","Супы","Японская",15,1,4,80,"soup",{c:"#cfa66a",b:[["wh","cube",8,.16],["g3","leaf",5,.16],["g2","ring",6,.08]]},
+"Мисо паста=3 ст. л.;Тофу=150 г;Водоросли вакаме=1 ст. л.;Зелёный лук=3 пер.;Даши бульон=800 мл",
+"Замочите вакаме в холодной воде на 5 минут.|Нагрейте даши, не доводя до кипения.|Разведите мисо в половнике бульона и влейте обратно.|Добавьте кубики тофу и вакаме, прогрейте 2 минуты.|Посыпьте зелёным луком."],
+["Харчо","Супы","Грузинская",120,2,6,260,"soup",{c:"#b8401f",b:[["meat","cube",7,.18],["wh","grain",14,.08],["g1","leaf",5,.1]]},
+"Говядина=600 г;Рис=80 г;Лук=2 шт;Ткемали=3 ст. л.;Грецкие орехи=50 г;Чеснок=4 зуб.;Хмели-сунели=1 ч. л.;Кинза=1 пуч.",
+"Сварите говяжий бульон, около 1,5 часа.|Обжарьте лук, добавьте ткемали и тушите 5 минут.|Положите в бульон рис и варите 10 минут.|Добавьте зажарку, толчёные орехи и хмели-сунели, варите ещё 10 минут.|Вмешайте чеснок и кинзу, дайте постоять 10 минут."],
+["Гаспачо","Супы","Испанская",20,1,4,110,"soup",{c:"#d53a2c",b:[["g2","cube",6,.1],["wh","cube",4,.12],["g1","leaf",3,.12]]},
+"Помидоры=1 кг;Огурцы=1 шт;Болгарский перец=1 шт;Чеснок=1 зуб.;Оливковое масло=50 мл;Хлеб=2 ломт.;Винный уксус=1 ст. л.;Соль=по вкусу",
+"Ошпарьте помидоры и снимите кожицу.|Нарежьте все овощи крупно и сложите в блендер вместе с хлебом.|Добавьте масло, уксус и соль, пробейте до гладкости.|Охладите суп минимум 1 час.|Подавайте холодным с мелко нарезанным огурцом."],
+["Окрошка на кефире","Супы","Русская",30,1,4,170,"soup",{c:"#f1ecdf",b:[["g2","cube",8,.12],["pink","cube",6,.13],["egg","cube",5,.11],["g1","ring",6,.07]]},
+"Кефир=1 л;Картофель=3 шт;Яйца=3 шт;Огурцы=2 шт;Варёная колбаса=250 г;Редис=6 шт;Зелёный лук=1 пуч.;Укроп=1 пуч.;Соль=по вкусу",
+"Отварите картофель в мундире и яйца, остудите.|Нарежьте картофель, яйца, огурцы, колбасу и редис мелкими кубиками.|Порубите зелень и слегка помните её с солью.|Соедините всё и залейте холодным кефиром, разбавленным минеральной водой по вкусу.|Охладите 30 минут перед подачей."],
+["Уха","Супы","Русская",50,1,5,140,"soup",{c:"#ead9a2",b:[["wh","cube",5,.22],["pot","cube",5,.15],["car","disc",5,.12],["dill","leaf",6,.1]]},
+"Рыба (судак или окунь)=700 г;Картофель=3 шт;Морковь=1 шт;Лук=1 шт;Лавровый лист=2 шт;Перец горошком=6 шт;Укроп=1 пуч.;Соль=по вкусу",
+"Залейте рыбу 2 л холодной воды, добавьте целую луковицу и варите 20 минут.|Процедите бульон, рыбу разберите на куски без костей.|Положите в бульон картофель и морковь, варите 15 минут.|Верните рыбу, добавьте лавровый лист и перец, варите 3 минуты.|Посыпьте укропом и дайте настояться."],
+["Рассольник","Супы","Русская",80,2,6,200,"soup",{c:"#cfa955",cream:1,b:[["g1","cube",6,.1],["pot","cube",5,.14],["car","stick",5,.1],["meat","cube",4,.16]]},
+"Говядина=500 г;Перловка=80 г;Солёные огурцы=3 шт;Картофель=3 шт;Морковь=1 шт;Лук=1 шт;Огуречный рассол=150 мл;Соль=по вкусу",
+"Замочите перловку на ночь или отварите отдельно 40 минут.|Сварите бульон из говядины.|Положите в бульон перловку и картофель, варите 15 минут.|Обжарьте лук и морковь, добавьте тёртые огурцы и тушите 5 минут.|Соедините всё с бульоном, влейте рассол и варите ещё 10 минут."],
+["Гороховый суп с копчёностями","Супы","Русская",120,1,6,290,"soup",{c:"#cdb043",b:[["#c98a4a","cube",8,.13],["meat","cube",4,.17],["g1","leaf",3,.1]]},
+"Горох колотый=300 г;Копчёные рёбрышки=500 г;Картофель=3 шт;Морковь=1 шт;Лук=1 шт;Сухарики=по вкусу;Соль=по вкусу",
+"Замочите горох на 2–3 часа.|Залейте рёбрышки 2,5 л воды, добавьте горох и варите 1 час.|Положите картофель и варите 15 минут.|Добавьте обжаренные лук и морковь, варите ещё 10 минут.|Подавайте с сухариками."],
+["Рамен со свининой","Супы","Японская",60,3,2,520,"soup",{c:"#d8a96a",egg:1,nori:1,b:[["pink","disc",3,.44],["g2","ring",10,.08],["#f3e3b0","stick",10,.22]]},
+"Пшеничная лапша=200 г;Свиная грудинка=300 г;Яйца=2 шт;Соевый соус=4 ст. л.;Мирин=2 ст. л.;Куриный бульон=1 л;Зелёный лук=3 пер.;Нори=2 л.;Имбирь=1 ч. л.",
+"Обжарьте грудинку со всех сторон, затем тушите 40 минут в соевом соусе с мирином и стаканом воды.|Сварите яйца 6,5 минут и замаринуйте в соусе от мяса.|Нагрейте бульон с имбирём и 2 ст. л. соуса от мяса.|Отварите лапшу и разложите по мискам.|Залейте бульоном, выложите нарезанное мясо, половинки яиц, нори и лук."],
+["Минестроне","Супы","Итальянская",50,1,6,170,"soup",{c:"#c45a30",b:[["g2","cube",6,.12],["car","cube",6,.1],["#f3e3b0","ring",6,.12],["bean","ball",6,.1]]},
+"Кабачок=1 шт;Морковь=1 шт;Сельдерей=2 стеб.;Фасоль консервированная=1 бан.;Помидоры в собственном соку=400 г;Макароны=80 г;Пармезан=30 г;Чеснок=2 зуб.;Соль=по вкусу",
+"Обжарьте чеснок, морковь и сельдерей на оливковом масле.|Добавьте кабачок и помидоры, залейте 1,5 л воды, варите 15 минут.|Положите фасоль и макароны, варите до готовности макарон.|Посолите и дайте постоять 5 минут.|Подавайте с тёртым пармезаном."],
+
+["Цезарь с курицей","Салаты","Американская",30,1,2,420,"salad",{leaves:["#7fae4a","#9cc35a","#5f9440"],b:[["#e6c08a","cube",8,.24],["#d29a4a","cube",10,.14],["#f6ecc8","leaf",8,.16],["red","ball",4,.22]]},
+"Куриное филе=300 г;Салат романо=1 шт;Пармезан=50 г;Хлеб=3 ломт.;Яйца=1 шт;Чеснок=1 зуб.;Майонез=3 ст. л.;Лимон=0.5 шт;Помидоры черри=6 шт",
+"Обжарьте куриное филе по 5 минут с каждой стороны и нарежьте.|Нарежьте хлеб кубиками и подсушите на сковороде с чесноком.|Смешайте майонез, сок лимона, тёртый пармезан и желток для соуса.|Порвите листья салата руками и заправьте соусом.|Выложите курицу, сухарики, черри и посыпьте пармезаном."],
+["Греческий салат","Салаты","Греческая",15,1,3,230,"salad",{leaves:[],base:"#6b9a45",b:[["red","cube",10,.24],["#8cbf5a","cube",10,.2],["yel","cube",6,.18],["wh","cube",8,.26],["olv","ball",8,.16],["#b77aa8","ring",5,.22]]},
+"Помидоры=3 шт;Огурцы=2 шт;Болгарский перец=1 шт;Красный лук=1 шт;Фета=150 г;Маслины=80 г;Оливковое масло=3 ст. л.;Орегано=1 ч. л.",
+"Нарежьте помидоры, огурцы и перец крупными кусками.|Лук нарежьте тонкими полукольцами.|Сложите овощи в миску, добавьте маслины.|Выложите сверху фету кубиками.|Полейте маслом и посыпьте орегано."],
+["Оливье","Салаты","Русская",60,1,6,320,"salad",{leaves:[],base:"#efe4c4",b:[["pot","cube",14,.15],["car","cube",8,.12],["#6aa040","ball",14,.09],["pink","cube",10,.15],["wh","cube",8,.13],["dill","leaf",4,.12]]},
+"Картофель=4 шт;Морковь=1 шт;Яйца=4 шт;Варёная колбаса=300 г;Солёные огурцы=3 шт;Зелёный горошек=1 бан.;Майонез=200 г;Укроп=по вкусу",
+"Отварите картофель, морковь и яйца, остудите и очистите.|Нарежьте всё одинаковыми кубиками вместе с колбасой и огурцами.|Добавьте горошек без жидкости.|Заправьте майонезом и перемешайте.|Уберите в холодильник на час перед подачей."],
+["Винегрет","Салаты","Русская",60,1,6,150,"salad",{leaves:[],base:"#9a2846",b:[["beet","cube",16,.16],["pot","cube",8,.14],["car","cube",8,.13],["#7aa64a","ball",10,.09],["#d9d4a8","shred",8,.16]]},
+"Свёкла=2 шт;Картофель=3 шт;Морковь=2 шт;Солёные огурцы=3 шт;Квашеная капуста=200 г;Зелёный горошек=0.5 бан.;Лук=1 шт;Растительное масло=3 ст. л.",
+"Отварите свёклу, картофель и морковь до мягкости и остудите.|Нарежьте овощи и огурцы кубиками.|Свёклу сначала смешайте с маслом, чтобы она не окрасила остальное.|Добавьте остальные овощи, капусту, горошек и лук.|Посолите и перемешайте."],
+["Сельдь под шубой","Салаты","Русская",90,2,6,350,"cake",{layers:[["#c9b9a0",.12],["#e8d7a8",.14],["car",.12],["#f3e9c0",.12],["beet",.18]],ring:[["dill","leaf",10,.14]]},
+"Сельдь слабосолёная=1 шт;Свёкла=2 шт;Картофель=3 шт;Морковь=2 шт;Яйца=3 шт;Лук=1 шт;Майонез=200 г",
+"Отварите овощи и яйца, остудите.|Разделайте сельдь на филе и нарежьте мелкими кубиками.|Выложите слоями: сельдь с луком, тёртый картофель, морковь, яйца, свёкла.|Каждый слой промазывайте майонезом.|Дайте салату пропитаться в холодильнике 3–4 часа."],
+["Капрезе","Салаты","Итальянская",10,1,2,280,"salad",{leaves:[],base:"#e9e4d6",b:[["red","disc",8,.56],["wh","disc",7,.52],["g1","leaf",8,.24]]},
+"Помидоры=3 шт;Моцарелла=200 г;Базилик=1 пуч.;Оливковое масло=2 ст. л.;Бальзамический уксус=1 ст. л.;Соль=по вкусу",
+"Нарежьте помидоры и моцареллу кружками толщиной 1 см.|Выложите их на блюдо, чередуя.|Переложите листьями базилика.|Посолите, полейте маслом и бальзамиком."],
+["Салат Нисуаз","Салаты","Французская",30,2,2,380,"salad",{leaves:["#7fae4a","#5f9440"],b:[["#c9a07a","crumb",6,.26],["g2","stick",10,.2],["pot","cube",6,.18],["wh","half",4,.3],["olv","ball",5,.14],["red","ball",4,.2]]},
+"Тунец консервированный=1 бан.;Стручковая фасоль=150 г;Картофель=3 шт;Яйца=2 шт;Помидоры черри=8 шт;Маслины=50 г;Листья салата=1 пуч.;Горчица=1 ч. л.;Оливковое масло=3 ст. л.",
+"Отварите картофель и яйца, нарежьте.|Бланшируйте фасоль 3 минуты и охладите в ледяной воде.|Смешайте масло с горчицей и щепоткой соли.|Выложите на листья салата картофель, фасоль, черри и маслины.|Сверху — тунец и половинки яиц, полейте заправкой."],
+["Мимоза","Салаты","Русская",60,1,6,300,"cake",{layers:[["#d9b48a",.14],["#e8d7a8",.14],["car",.12],["#f6f1e2",.12],["#f4c43a",.1]],ring:[["dill","leaf",10,.14]]},
+"Консервированная рыба=1 бан.;Картофель=3 шт;Морковь=2 шт;Яйца=4 шт;Лук=1 шт;Майонез=150 г;Сыр=80 г",
+"Отварите картофель, морковь и яйца.|Разомните рыбу вилкой вместе с соком.|Выложите слоями: рыба, лук, картофель, морковь, сыр, белки.|Промажьте слои майонезом.|Сверху натрите желтки и уберите в холодильник на 2 часа."],
+["Салат из свежих овощей","Салаты","Русская",10,1,3,90,"salad",{leaves:["#7fae4a"],base:"#7aa046",cream:1,b:[["red","cube",10,.22],["#8cbf5a","cube",10,.2],["#d84a6a","disc",8,.2],["dill","leaf",6,.12]]},
+"Помидоры=3 шт;Огурцы=2 шт;Редис=5 шт;Зелёный лук=1 пуч.;Укроп=1 пуч.;Сметана=3 ст. л.;Соль=по вкусу",
+"Нарежьте помидоры и огурцы дольками.|Редис нарежьте тонкими кружками.|Порубите зелень.|Посолите и заправьте сметаной перед подачей."],
+["Табуле","Салаты","Ливанская",25,1,4,190,"salad",{leaves:[],base:"#4f8a3a",b:[["#e6d49a","grain",30,.09],["red","cube",10,.13],["g2","cube",6,.12],["g3","leaf",14,.12]]},
+"Булгур=100 г;Петрушка=2 пуч.;Мята=0.5 пуч.;Помидоры=3 шт;Огурцы=1 шт;Лимон=1 шт;Оливковое масло=4 ст. л.;Соль=по вкусу",
+"Залейте булгур кипятком на 20 минут, затем откиньте.|Очень мелко порубите петрушку и мяту.|Нарежьте помидоры и огурец мелкими кубиками.|Смешайте всё с булгуром.|Заправьте соком лимона, маслом и солью."],
+["Крабовый салат","Салаты","Русская",30,1,4,290,"salad",{leaves:[],base:"#f1e6c6",b:[["#f0624a","stick",10,.22],["yel","ball",20,.09],["wh","cube",8,.13],["#8cbf5a","cube",8,.13],["#f7f3ea","grain",16,.08]]},
+"Крабовые палочки=200 г;Кукуруза консервированная=1 бан.;Рис=80 г;Яйца=3 шт;Огурцы=1 шт;Майонез=4 ст. л.;Соль=по вкусу",
+"Отварите рис и яйца, остудите.|Нарежьте крабовые палочки, яйца и огурец кубиками.|Добавьте кукурузу без жидкости и рис.|Заправьте майонезом и посолите."],
+
+["Стейк рибай","Мясо и птица","Американская",25,2,2,650,"meat",{kind:"steak",c:"#6e3a22",side:[["pot","half",5,.38],["g1","leaf",6,.22],["#f3e3b0","cube",3,.12]]},
+"Говядина=600 г;Сливочное масло=30 г;Чеснок=2 зуб.;Розмарин=2 вет.;Соль=по вкусу;Перец чёрный=по вкусу",
+"Достаньте мясо из холодильника за 40 минут до готовки и обсушите.|Разогрейте сковороду до сильного жара, посолите стейки.|Жарьте по 3–4 минуты с каждой стороны.|Добавьте масло, чеснок и розмарин и поливайте мясо маслом 1 минуту.|Дайте стейку отдохнуть 5 минут, затем поперчите."],
+["Котлеты домашние","Мясо и птица","Русская",45,1,4,380,"meat",{kind:"cutlet",c:"#6b3c20",side:[["#f2e2b0","blob",1,1.3],["dill","leaf",4,.12]]},
+"Фарш=600 г;Лук=1 шт;Хлеб=2 ломт.;Молоко=100 мл;Яйца=1 шт;Чеснок=2 зуб.;Панировочные сухари=50 г;Соль=по вкусу",
+"Замочите хлеб в молоке на 5 минут.|Натрите лук и чеснок, смешайте с фаршем, хлебом и яйцом, посолите.|Хорошо вымесите и отбейте фарш о миску.|Сформируйте котлеты и обваляйте в сухарях.|Обжарьте по 4 минуты с каждой стороны, затем потушите под крышкой 10 минут."],
+["Бефстроганов","Мясо и птица","Русская",40,2,4,420,"rice",{split:1,rc:"#f2e3b5",rgrains:0,c:"#b88a5a",b:[["meat","stick",10,.24],["g1","leaf",3,.1]]},
+"Говядина=600 г;Лук=2 шт;Сметана=200 г;Мука=1 ст. л.;Томатная паста=1 ст. л.;Сливочное масло=30 г;Соль=по вкусу",
+"Нарежьте говядину тонкими брусками поперёк волокон.|Быстро обжарьте мясо порциями на сильном огне и выложите.|В той же сковороде обжарьте лук, добавьте муку и томатную пасту.|Вмешайте сметану и полстакана воды, верните мясо.|Тушите 10 минут на слабом огне. Подавайте с пюре."],
+["Курица в духовке с картошкой","Мясо и птица","Русская",80,1,4,480,"meat",{kind:"leg",c:"#c98034",side:[["pot","cube",10,.28],["g1","leaf",5,.14]]},
+"Куриные бёдра=8 шт;Картофель=800 г;Чеснок=4 зуб.;Сметана=3 ст. л.;Паприка=1 ч. л.;Розмарин=2 вет.;Соль=по вкусу",
+"Смешайте сметану, паприку, давленый чеснок и соль.|Обмажьте курицу маринадом и оставьте на 20 минут.|Нарежьте картофель дольками, посолите и выложите в форму.|Сверху положите курицу и розмарин.|Запекайте 50 минут при 200 °C."],
+["Шашлык из свинины","Мясо и птица","Кавказская",60,2,6,520,"skewer",{chunks:["#8a4a28","#7a3f22","#9b5530"],b:[["#e8d8e8","ring",10,.32],["g1","leaf",6,.18]]},
+"Свиная шея=1.5 кг;Лук=4 шт;Уксус 9%=2 ст. л.;Зира=1 ч. л.;Перец чёрный=по вкусу;Соль=по вкусу",
+"Нарежьте мясо кусками по 4–5 см.|Смешайте с кольцами лука, зирой, солью, перцем и уксусом, разбавленным водой.|Маринуйте минимум 4 часа, лучше ночь.|Нанижите мясо на шампуры.|Жарьте на углях 15–20 минут, постоянно переворачивая."],
+["Голубцы","Мясо и птица","Русская",90,2,6,330,"dumplings",{shape:"roll",n:6,c:"#dfe2b5",pool:"#d0643c",cream:1,b:[["dill","leaf",6,.12]]},
+"Капуста белокочанная=1 шт;Фарш=500 г;Рис=100 г;Лук=1 шт;Морковь=1 шт;Томатная паста=2 ст. л.;Сметана=200 г;Соль=по вкусу",
+"Отварите рис до полуготовности.|Опустите кочан в кипяток и снимайте листья по мере размягчения.|Смешайте фарш, рис и половину обжаренного лука, посолите.|Заверните начинку в листья конвертом.|Залейте соусом из сметаны, томатной пасты, моркови и воды и тушите 40 минут."],
+["Свинина по-французски","Мясо и птица","Русская",60,1,4,520,"meat",{kind:"chop",c:"#e8c060",side:[["g1","leaf",6,.2],["red","ball",4,.2]]},
+"Свинина=600 г;Картофель=4 шт;Лук=2 шт;Сыр=150 г;Майонез=3 ст. л.;Помидоры=2 шт;Соль=по вкусу",
+"Нарежьте свинину пластами и отбейте.|Выложите картофель тонкими кружками в форму и посолите.|Сверху положите мясо, лук и кружки помидоров.|Смажьте майонезом и посыпьте сыром.|Запекайте 45 минут при 190 °C."],
+["Курица терияки с рисом","Мясо и птица","Японская",30,1,3,390,"rice",{split:1,rc:"#f6f3ea",gc:"#ffffff",c:"#6b3a1c",b:[["#8a4a20","cube",10,.25],["wh","grain",14,.06],["g2","ring",6,.08]]},
+"Куриное филе=500 г;Соевый соус=4 ст. л.;Мёд=2 ст. л.;Мирин=2 ст. л.;Чеснок=2 зуб.;Имбирь=1 ч. л.;Кунжут=1 ч. л.;Рис=200 г",
+"Отварите рис.|Нарежьте курицу кусочками и обжарьте до румяности.|Смешайте соевый соус, мёд, мирин, чеснок и имбирь.|Влейте соус к курице и уваривайте 5 минут до глянца.|Подавайте с рисом и посыпьте кунжутом."],
+["Курица карри","Мясо и птица","Индийская",45,2,4,450,"rice",{split:1,rc:"#f6f3ea",gc:"#ffffff",c:"#e0a03a",b:[["#f0d6a8","cube",9,.26],["g1","leaf",4,.12]]},
+"Куриное филе=600 г;Кокосовое молоко=400 мл;Паста карри=2 ст. л.;Лук=1 шт;Чеснок=3 зуб.;Имбирь=1 ч. л.;Помидоры=2 шт;Рис=250 г",
+"Обжарьте лук, чеснок и имбирь 5 минут.|Добавьте пасту карри и прогрейте 1 минуту.|Положите курицу кусочками и обжарьте со всех сторон.|Добавьте помидоры и кокосовое молоко, тушите 20 минут.|Подавайте с отварным рисом."],
+["Чили кон карне","Мясо и птица","Мексиканская",70,1,6,410,"soup",{c:"#8f3a1f",cream:1,b:[["bean","ball",14,.13],["meat","crumb",10,.13],["g1","leaf",4,.12]]},
+"Фарш=600 г;Фасоль консервированная=2 бан.;Помидоры в собственном соку=400 г;Лук=1 шт;Болгарский перец=1 шт;Чеснок=3 зуб.;Перец чили=1 шт;Кумин=1 ч. л.;Соль=по вкусу",
+"Обжарьте лук, чеснок и перец 5 минут.|Добавьте фарш и жарьте, разбивая комки, до румяности.|Вмешайте кумин, чили и помидоры.|Тушите 30 минут, затем добавьте фасоль и тушите ещё 15.|Подавайте со сметаной и кинзой."],
+["Бургер классический","Мясо и птица","Американская",30,1,4,650,"burger",{},
+"Фарш=600 г;Булочки для бургеров=4 шт;Сыр=4 ломт.;Помидоры=1 шт;Листья салата=4 шт;Красный лук=1 шт;Солёные огурцы=2 шт;Кетчуп=по вкусу;Соль=по вкусу",
+"Разделите фарш на 4 части и сформируйте котлеты чуть шире булочки.|Посолите и обжарьте по 3–4 минуты с каждой стороны.|В конце положите на котлеты сыр и накройте крышкой на минуту.|Подрумяньте разрезанные булочки.|Соберите бургер: соус, салат, котлета, помидор, лук, огурцы."],
+["Бургер с курицей","Мясо и птица","Американская",35,1,2,590,"burger",{patty:"#d79a4a"},
+"Куриное филе=2 шт;Булочки для бургеров=2 шт;Панировочные сухари=60 г;Яйца=1 шт;Листья салата=2 шт;Помидоры=1 шт;Майонез=2 ст. л.;Соль=по вкусу",
+"Отбейте филе до толщины 1 см и посолите.|Обмакните в яйцо, затем в сухари.|Обжарьте в масле по 4 минуты с каждой стороны.|Подрумяньте булочки.|Соберите бургер с майонезом, салатом и помидором."],
+["Тако с говядиной","Мясо и птица","Мексиканская",30,1,4,430,"taco",{},
+"Фарш=500 г;Кукурузные тортильи=8 шт;Помидоры=2 шт;Листья салата=4 шт;Сыр=100 г;Красный лук=1 шт;Сметана=100 г;Кумин=1 ч. л.;Соль=по вкусу",
+"Обжарьте фарш с кумином и солью до готовности.|Нарежьте помидоры и лук кубиками, салат — тонкой соломкой.|Прогрейте тортильи на сухой сковороде.|Положите на тортилью фарш, овощи и тёртый сыр.|Добавьте сметану и сложите пополам."],
+["Шаурма домашняя","Мясо и птица","Восточная",30,1,2,560,"taco",{wrap:1},
+"Лаваш=2 шт;Куриное филе=400 г;Капуста белокочанная=150 г;Огурцы=1 шт;Помидоры=1 шт;Чеснок=2 зуб.;Сметана=3 ст. л.;Майонез=2 ст. л.;Соль=по вкусу",
+"Нарежьте курицу полосками и обжарьте со специями.|Смешайте сметану, майонез и чеснок для соуса.|Нашинкуйте капусту, нарежьте огурец и помидор.|Смажьте лаваш соусом, выложите курицу и овощи.|Сверните плотным рулетом и обжарьте с двух сторон на сухой сковороде."],
+["Куриные крылышки барбекю","Мясо и птица","Американская",50,1,4,420,"meat",{kind:"wings",c:"#8a3b1c",side:[["#e8e0c0","stick",6,.32],["car","stick",6,.32]]},
+"Куриные крылья=1 кг;Соус барбекю=5 ст. л.;Мёд=1 ст. л.;Чеснок=2 зуб.;Паприка=1 ч. л.;Соль=по вкусу",
+"Смешайте соус барбекю, мёд, чеснок и паприку.|Посолите крылья и обмажьте половиной соуса.|Запекайте 25 минут при 200 °C.|Смажьте оставшимся соусом и запекайте ещё 15 минут.|Подавайте с палочками сельдерея и моркови."],
+
+["Лосось с лимоном в духовке","Рыба и морепродукты","Скандинавская",30,1,2,420,"fish",{fillet:1,c:"#f08a5d",lemon:1,side:[["g1","stick",8,.32]]},
+"Лосось (филе)=400 г;Лимон=1 шт;Укроп=0.5 пуч.;Чеснок=1 зуб.;Оливковое масло=1 ст. л.;Соль=по вкусу",
+"Разогрейте духовку до 200 °C.|Положите филе кожей вниз на пергамент, посолите.|Смажьте маслом с чесноком и укропом.|Сверху выложите тонкие кружки лимона.|Запекайте 15–18 минут."],
+["Скумбрия запечённая","Рыба и морепродукты","Русская",40,1,2,380,"fish",{c:"#8b98a3",lemon:1,side:[["pot","half",4,.34]]},
+"Скумбрия=2 шт;Лимон=1 шт;Лук=1 шт;Петрушка=0.5 пуч.;Соль=по вкусу",
+"Выпотрошите рыбу, промойте и обсушите.|Натрите солью снаружи и внутри.|Положите в брюшко кольца лука, лимон и петрушку.|Заверните в фольгу.|Запекайте 25 минут при 200 °C, последние 5 минут — раскрыв фольгу."],
+["Рыба в кляре с картошкой фри","Рыба и морепродукты","Британская",40,2,2,690,"fish",{batter:1,c:"#d99a45",fries:1,lemon:1},
+"Треска=400 г;Мука=150 г;Газированная вода=200 мл;Картофель=4 шт;Лимон=0.5 шт;Растительное масло=1 л;Соль=по вкусу",
+"Нарежьте картофель брусками и обсушите.|Смешайте муку с холодной газированной водой и щепоткой соли.|Обжарьте картофель во фритюре 5 минут, достаньте, затем дожарьте ещё 3 минуты до хруста.|Обсушите рыбу, обваляйте в муке и окуните в кляр.|Жарьте рыбу 5–6 минут до золотистого цвета. Подавайте с лимоном."],
+["Дорадо на гриле","Рыба и морепродукты","Средиземноморская",30,2,2,330,"fish",{c:"#b8c2c8",lemon:1,side:[["g1","leaf",6,.22],["red","ball",4,.22]]},
+"Дорадо=2 шт;Лимон=1 шт;Розмарин=2 вет.;Чеснок=2 зуб.;Оливковое масло=2 ст. л.;Соль=по вкусу",
+"Сделайте на рыбе по 3 надреза с каждой стороны.|Натрите солью и маслом.|Положите в брюшко лимон, чеснок и розмарин.|Жарьте на гриле или сковороде-гриль по 6–7 минут с каждой стороны."],
+["Креветки в чесночном масле","Рыба и морепродукты","Испанская",15,1,2,260,"pan",{c:"#e8b04a",b:[["pink","shrimp",14,.44],["g1","leaf",8,.12],["#f6efdc","crumb",8,.08]]},
+"Креветки=400 г;Чеснок=5 зуб.;Оливковое масло=60 мл;Перец чили=1 шт;Петрушка=0.5 пуч.;Лимон=0.5 шт;Соль=по вкусу",
+"Нарежьте чеснок пластинками, чили — кольцами.|Прогрейте их в масле на среднем огне 1 минуту.|Добавьте очищенные креветки и жарьте по минуте с каждой стороны.|Посолите, сбрызните лимоном и посыпьте петрушкой."],
+["Мидии в сливочном соусе","Рыба и морепродукты","Бельгийская",25,2,2,380,"pan",{c:"#efe3c0",b:[["#1f2230","half",14,.4],["#f0a060","leaf",10,.18],["g1","leaf",6,.1]]},
+"Мидии=1 кг;Сливки 20%=200 мл;Чеснок=3 зуб.;Лук=1 шт;Сливочное масло=30 г;Петрушка=0.5 пуч.;Соль=по вкусу",
+"Промойте мидии и удалите нити.|Обжарьте лук и чеснок на сливочном масле.|Положите мидии, накройте крышкой и готовьте 5 минут, пока створки не раскроются.|Влейте сливки, прогрейте 2 минуты.|Посыпьте петрушкой. Нераскрывшиеся мидии выбросьте."],
+
+["Паста карбонара","Паста и лапша","Итальянская",25,2,2,680,"pasta",{c:"#f1d27a",b:[["#c96a5a","cube",10,.13],["#f6ecc8","crumb",14,.07],["#222222","crumb",10,.035]]},
+"Спагетти=200 г;Бекон=120 г;Яйца=2 шт;Пармезан=50 г;Перец чёрный=по вкусу;Соль=по вкусу",
+"Отварите спагетти в подсоленной воде до состояния аль денте.|Обжарьте бекон кубиками до хруста.|Взбейте яйца с тёртым пармезаном и перцем.|Смешайте горячую пасту с беконом, снимите с огня и влейте яичную смесь.|Быстро перемешайте, добавляя немного воды от пасты, до кремовой текстуры."],
+["Паста болоньезе","Паста и лапша","Итальянская",90,1,4,620,"pasta",{c:"#f1d27a",sauce:"#9b3a1f",b:[["#f6ecc8","crumb",12,.08],["g1","leaf",2,.22]]},
+"Спагетти=400 г;Фарш=500 г;Помидоры в собственном соку=400 г;Лук=1 шт;Морковь=1 шт;Сельдерей=1 стеб.;Чеснок=2 зуб.;Пармезан=40 г;Соль=по вкусу",
+"Мелко нарежьте лук, морковь и сельдерей и обжарьте 7 минут.|Добавьте фарш и обжарьте до румяности.|Вмешайте помидоры и чеснок, тушите на слабом огне минимум 1 час.|Отварите спагетти.|Подавайте с соусом и тёртым пармезаном."],
+["Паста с курицей и грибами","Паста и лапша","Итальянская",30,1,3,640,"pasta",{shape:"penne",c:"#f0cd7a",b:[["#efd8a8","cube",8,.22],["mush","half",6,.22],["g1","leaf",4,.12]]},
+"Макароны=300 г;Куриное филе=300 г;Шампиньоны=200 г;Сливки 20%=200 мл;Чеснок=2 зуб.;Пармезан=40 г;Соль=по вкусу",
+"Отварите макароны.|Обжарьте курицу кусочками до золотистости.|Добавьте грибы и чеснок, жарьте 5 минут.|Влейте сливки и уварите соус 3 минуты.|Смешайте с пастой и посыпьте пармезаном."],
+["Лазанья","Паста и лапша","Итальянская",120,3,6,580,"cake",{square:1,layers:[["#e8c690",.08],["#9b3a22",.14],["#f0e3c0",.06],["#e8c690",.08],["#9b3a22",.14],["#f0e3c0",.06],["#e0b058",.08]],top:[["#c9862e","crumb",14,.1]]},
+"Листы лазаньи=250 г;Фарш=600 г;Помидоры в собственном соку=400 г;Молоко=700 мл;Сливочное масло=60 г;Мука=60 г;Пармезан=80 г;Моцарелла=200 г;Лук=1 шт;Соль=по вкусу",
+"Приготовьте мясной соус: обжарьте лук и фарш, добавьте помидоры и тушите 30 минут.|Сделайте бешамель: растопите масло, обжарьте муку, влейте молоко и варите до загустения.|Выкладывайте слоями: бешамель, листы, мясной соус, сыр.|Повторите 3–4 раза, сверху — бешамель и моцарелла.|Запекайте 40 минут при 180 °C и дайте постоять 15 минут."],
+["Макароны по-флотски","Паста и лапша","Русская",30,1,4,520,"pasta",{shape:"penne",c:"#f0cd7a",b:[["br","crumb",30,.13],["dill","leaf",4,.1]]},
+"Макароны=400 г;Фарш=400 г;Лук=1 шт;Сливочное масло=20 г;Соль=по вкусу",
+"Отварите макароны и откиньте на дуршлаг.|Обжарьте лук до прозрачности.|Добавьте фарш и жарьте 10 минут, разбивая комки.|Соедините с макаронами и маслом, прогрейте 2 минуты."],
+["Паста песто","Паста и лапша","Итальянская",20,1,2,560,"pasta",{c:"#a9b84a",b:[["#f3e3b8","grain",10,.11],["g1","leaf",5,.22],["#f6ecc8","crumb",10,.07]]},
+"Спагетти=200 г;Базилик=2 пуч.;Пармезан=40 г;Кедровые орехи=30 г;Чеснок=1 зуб.;Оливковое масло=80 мл;Соль=по вкусу",
+"Подсушите кедровые орехи на сухой сковороде.|Измельчите базилик, орехи, чеснок и пармезан, вливая масло.|Отварите спагетти.|Смешайте пасту с соусом, добавив ложку воды от варки."],
+["Пад тай","Паста и лапша","Тайская",30,2,2,560,"pasta",{c:"#efe2b8",thick:.045,b:[["pink","shrimp",5,.38],["#c98a4a","crumb",14,.09],["#f4f0d8","stick",8,.2],["g2","ring",6,.08]]},
+"Рисовая лапша=200 г;Креветки=200 г;Яйца=2 шт;Ростки сои=100 г;Арахис=40 г;Рыбный соус=2 ст. л.;Лайм=1 шт;Сахар=1 ст. л.;Зелёный лук=3 пер.",
+"Замочите лапшу в тёплой воде на 15 минут.|Обжарьте креветки в воке и отодвиньте к краю.|Вбейте яйца и перемешайте до схватывания.|Добавьте лапшу, рыбный соус, сахар и сок лайма, жарьте 3 минуты.|Вмешайте ростки и лук, посыпьте рублеными орехами."],
+["Удон с курицей и овощами","Паста и лапша","Японская",25,1,2,540,"pasta",{c:"#f3ead0",thick:.06,b:[["#e6c08a","cube",8,.22],["car","stick",8,.2],["g2","stick",6,.2],["wh","grain",10,.06]]},
+"Лапша удон=300 г;Куриное филе=300 г;Морковь=1 шт;Болгарский перец=1 шт;Соевый соус=3 ст. л.;Чеснок=2 зуб.;Кунжут=1 ч. л.",
+"Нарежьте курицу и овощи тонкими полосками.|Обжарьте курицу в воке на сильном огне 4 минуты.|Добавьте овощи и чеснок, жарьте 3 минуты.|Положите удон и соевый соус, перемешайте и прогрейте.|Посыпьте кунжутом."],
+
+["Ризотто с грибами","Гарниры и крупы","Итальянская",40,2,3,480,"rice",{c:"#efe2bf",gc:"#f4ead0",b:[["mush","half",8,.26],["g1","leaf",4,.12]]},
+"Рис=250 г;Шампиньоны=300 г;Лук=1 шт;Сухое белое вино=100 мл;Куриный бульон=1 л;Пармезан=50 г;Сливочное масло=40 г;Соль=по вкусу",
+"Обжарьте грибы и отложите.|На масле обжарьте лук, добавьте рис и прогрейте 2 минуты.|Влейте вино и дайте ему выпариться.|Добавляйте горячий бульон по половнику, постоянно помешивая, около 18 минут.|Вмешайте грибы, масло и пармезан, накройте на 2 минуты."],
+["Жареный рис с яйцом","Гарниры и крупы","Китайская",20,1,2,450,"rice",{c:"#f2dd9a",gc:"#f4e6b0",b:[["egg","crumb",10,.13],["#7cb34a","ball",14,.09],["car","cube",10,.09],["g2","ring",6,.08]]},
+"Рис=300 г;Яйца=2 шт;Зелёный горошек=80 г;Морковь=1 шт;Зелёный лук=3 пер.;Соевый соус=2 ст. л.;Чеснок=1 зуб.",
+"Возьмите остывший варёный рис, лучше вчерашний.|Обжарьте морковь и горошек с чесноком 3 минуты.|Отодвиньте овощи, вбейте яйца и перемешайте.|Добавьте рис и соевый соус, жарьте на сильном огне 4 минуты.|Посыпьте зелёным луком."],
+["Гречка по-купечески","Гарниры и крупы","Русская",50,1,4,410,"rice",{c:"#7a4a2a",gc:"#8a5a32",b:[["meat","cube",10,.22],["car","stick",8,.13]]},
+"Гречка=250 г;Свинина=400 г;Лук=1 шт;Морковь=1 шт;Томатная паста=1 ст. л.;Соль=по вкусу",
+"Обжарьте свинину кусочками до румяности.|Добавьте лук и морковь, жарьте 5 минут.|Вмешайте томатную пасту.|Всыпьте промытую гречку и залейте 500 мл горячей воды, посолите.|Тушите под крышкой 25 минут на слабом огне."],
+["Плов узбекский","Гарниры и крупы","Узбекская",120,2,8,560,"rice",{c:"#d9a24a",gc:"#e2b058",garlic:1,b:[["car","stick",16,.17],["meat","cube",8,.24]]},
+"Баранина=800 г;Рис=600 г;Морковь=800 г;Лук=2 шт;Чеснок=2 гол.;Зира=1 ч. л.;Барбарис=1 ч. л.;Растительное масло=150 мл;Соль=по вкусу",
+"Раскалите масло в казане и обжарьте мясо до корочки.|Добавьте лук, затем морковь соломкой, жарьте 10 минут.|Залейте водой, добавьте зиру, барбарис и соль, тушите 40 минут — это зирвак.|Выложите промытый рис ровным слоем и залейте водой на 1,5 см выше.|Когда вода впитается, воткните чеснок, накройте и томите 25 минут."],
+["Картофельное пюре","Гарниры и крупы","Русская",30,1,4,220,"rice",{c:"#f2e2b0",grains:0,b:[["#f7e08a","cube",1,.3],["dill","leaf",4,.1]]},
+"Картофель=1 кг;Молоко=200 мл;Сливочное масло=50 г;Соль=по вкусу",
+"Очистите картофель и отварите в подсоленной воде 20 минут.|Слейте воду и подсушите картофель на огне 1 минуту.|Разомните толкушкой.|Влейте горячее молоко и добавьте масло, взбейте до пышности."],
+["Жареная картошка с луком","Гарниры и крупы","Русская",30,1,3,340,"pan",{c:"#d9a24a",b:[["#e6b55a","stick",40,.32],["#c08a5a","ring",8,.17],["dill","leaf",6,.1]]},
+"Картофель=800 г;Лук=1 шт;Растительное масло=4 ст. л.;Укроп=по вкусу;Соль=по вкусу",
+"Нарежьте картофель брусками и обсушите полотенцем.|Выложите в разогретое масло одним слоем и не трогайте 5 минут.|Переворачивайте и жарьте до золотистой корочки, около 15 минут.|Добавьте лук и жарьте ещё 5 минут, посолите в конце."],
+["Драники","Гарниры и крупы","Белорусская",40,1,4,320,"pancakes",{spread:1,c:"#b9772f",r:.42,t:.12,n:6,cream:1},
+"Картофель=800 г;Лук=1 шт;Яйца=1 шт;Мука=2 ст. л.;Сметана=по вкусу;Соль=по вкусу",
+"Натрите картофель и лук на мелкой тёрке.|Отожмите лишнюю жидкость.|Добавьте яйцо, муку и соль, перемешайте.|Выкладывайте ложкой на сковороду с маслом и жарьте по 3 минуты с каждой стороны.|Подавайте горячими со сметаной."],
+
+["Пицца Маргарита","Пицца и выпечка","Итальянская",90,2,4,560,"pizza",{top:[["wh","blob",10,.5],["g1","leaf",8,.3]]},
+"Мука=300 г;Дрожжи сухие=5 г;Вода=180 мл;Оливковое масло=2 ст. л.;Помидоры в собственном соку=200 г;Моцарелла=200 г;Базилик=0.5 пуч.;Соль=1 ч. л.",
+"Замесите тесто из муки, дрожжей, тёплой воды, соли и масла, оставьте на 1 час.|Измельчите помидоры с солью для соуса.|Раскатайте тесто тонко и выложите на противень.|Смажьте соусом и разложите кусочки моцареллы.|Выпекайте 10–12 минут при 250 °C и посыпьте базиликом."],
+["Пицца Пепперони","Пицца и выпечка","Американская",90,2,4,640,"pizza",{top:[["#b4321f","disc",22,.44]]},
+"Мука=300 г;Дрожжи сухие=5 г;Вода=180 мл;Помидоры в собственном соку=200 г;Моцарелла=200 г;Пепперони=120 г;Оливковое масло=2 ст. л.;Соль=1 ч. л.",
+"Приготовьте дрожжевое тесто и дайте ему подняться 1 час.|Раскатайте основу и смажьте томатным соусом.|Посыпьте тёртой моцареллой.|Выложите кружки пепперони.|Выпекайте 12 минут при 250 °C."],
+["Пицца Четыре сыра","Пицца и выпечка","Итальянская",90,2,4,690,"pizza",{sauce:"#f1e3b8",cheese:"#f3dc95",top:[["#f7f1df","blob",10,.44],["#d6c27a","blob",8,.36],["#5f7a9a","crumb",8,.1]]},
+"Мука=300 г;Дрожжи сухие=5 г;Вода=180 мл;Моцарелла=150 г;Горгонзола=60 г;Пармезан=40 г;Сыр=60 г;Сливки 20%=50 мл;Соль=1 ч. л.",
+"Приготовьте тесто и дайте подняться 1 час.|Раскатайте основу и смажьте сливками.|Разложите четыре вида сыра.|Выпекайте 10–12 минут при 250 °C."],
+["Хачапури по-аджарски","Пицца и выпечка","Грузинская",60,2,2,690,"bake",{kind:"boat"},
+"Мука=300 г;Кефир=200 мл;Сулугуни=200 г;Сыр=150 г;Яйца=3 шт;Сливочное масло=30 г;Сода=0.5 ч. л.;Соль=по вкусу",
+"Замесите тесто из муки, кефира, соды и соли, дайте отдохнуть 20 минут.|Натрите сыры и смешайте с одним яйцом.|Раскатайте тесто овалом, сверните края к центру и защипните концы — получится лодочка.|Выложите сыр внутрь и выпекайте 15 минут при 220 °C.|Вбейте в центр яйцо и выпекайте ещё 3 минуты. Положите кусочек масла."],
+["Шарлотка с яблоками","Пицца и выпечка","Русская",60,1,8,260,"bake",{kind:"pie",top:"#e2a85a",slits:0},
+"Яблоки=4 шт;Яйца=4 шт;Сахар=200 г;Мука=200 г;Сливочное масло=10 г;Корица=0.5 ч. л.",
+"Разогрейте духовку до 180 °C и смажьте форму маслом.|Взбейте яйца с сахаром до пышной светлой массы, около 7 минут.|Аккуратно вмешайте муку.|Выложите нарезанные яблоки в форму, посыпьте корицей и залейте тестом.|Выпекайте 40 минут до сухой шпажки."],
+["Пирог с капустой","Пицца и выпечка","Русская",90,2,8,280,"bake",{kind:"pie",top:"#d4914a"},
+"Мука=400 г;Кефир=250 мл;Капуста белокочанная=500 г;Яйца=3 шт;Лук=1 шт;Сливочное масло=50 г;Сода=0.5 ч. л.;Соль=по вкусу",
+"Потушите нашинкованную капусту с луком 20 минут и остудите.|Добавьте в начинку 2 рубленых варёных яйца.|Замесите тесто из кефира, яйца, муки, соды и растопленного масла.|Разделите тесто на две части, выложите начинку между слоями.|Выпекайте 40 минут при 180 °C."],
+["Киш Лорен","Пицца и выпечка","Французская",70,2,6,420,"bake",{kind:"open",fill:"#f0cf7a",b:[["#c96a5a","cube",12,.13],["g2","leaf",5,.14]]},
+"Мука=200 г;Сливочное масло=100 г;Яйца=4 шт;Сливки 20%=250 мл;Бекон=150 г;Сыр=100 г;Соль=по вкусу",
+"Порубите холодное масло с мукой, добавьте яйцо и соберите тесто, охладите 30 минут.|Раскатайте и уложите в форму с бортиками, выпекайте 10 минут при 190 °C.|Обжарьте бекон.|Взбейте 3 яйца со сливками и тёртым сыром.|Выложите бекон в основу, залейте смесью и выпекайте 30 минут."],
+["Пирожки с картошкой","Пицца и выпечка","Русская",120,2,12,210,"dumplings",{shape:"oval",n:7,c:"#d8964a"},
+"Мука=500 г;Молоко=250 мл;Дрожжи сухие=7 г;Яйца=1 шт;Сахар=1 ст. л.;Картофель=600 г;Лук=1 шт;Сливочное масло=40 г;Соль=по вкусу",
+"Замесите тесто из тёплого молока, дрожжей, сахара, яйца и муки, оставьте на 1 час.|Сделайте пюре и смешайте с обжаренным луком.|Разделите тесто на шарики и раскатайте лепёшки.|Положите начинку и защипните края.|Обжарьте на масле или испеките при 190 °C 20 минут."],
+["Банановый хлеб","Пицца и выпечка","Американская",70,1,8,290,"bake",{kind:"loaf",c:"#9b5f2c",b:[["#f2df9a","disc",4,.34],["#9b6a3c","crumb",8,.12]]},
+"Бананы=3 шт;Мука=200 г;Сахар=100 г;Яйца=2 шт;Сливочное масло=80 г;Разрыхлитель=1 ч. л.;Грецкие орехи=50 г",
+"Разомните бананы вилкой.|Смешайте с растопленным маслом, сахаром и яйцами.|Добавьте муку с разрыхлителем и орехи.|Выложите в форму для кекса.|Выпекайте 50 минут при 175 °C."],
+["Фокачча с розмарином","Пицца и выпечка","Итальянская",150,2,8,230,"bake",{kind:"flat",c:"#e0ad5c",b:[["g3","stick",10,.2],["red","half",6,.22]]},
+"Мука=500 г;Вода=400 мл;Дрожжи сухие=7 г;Оливковое масло=60 мл;Розмарин=2 вет.;Соль=1 ч. л.",
+"Смешайте муку, воду, дрожжи и соль в липкое тесто.|Оставьте на 1,5 часа, дважды сложив тесто конвертом.|Выложите в смазанную маслом форму и растяните.|Сделайте пальцами углубления, полейте маслом и посыпьте розмарином.|Выпекайте 20–25 минут при 220 °C."],
+
+["Пельмени домашние","Пельмени и вареники","Русская",120,3,6,450,"dumplings",{shape:"pelmen",n:11,c:"#f3e8d0",cream:1,b:[["dill","leaf",8,.1]]},
+"Мука=500 г;Яйца=1 шт;Вода=200 мл;Фарш=600 г;Лук=2 шт;Сметана=по вкусу;Соль=по вкусу",
+"Замесите крутое тесто из муки, яйца, воды и соли, оставьте на 30 минут.|Смешайте фарш с тёртым луком, солью и 50 мл ледяной воды.|Раскатайте тесто тонко и вырежьте кружки.|Положите начинку, сложите пополам и соедините концы.|Варите в подсоленной воде 5 минут после всплытия."],
+["Вареники с картошкой","Пельмени и вареники","Украинская",90,2,5,380,"dumplings",{shape:"d",n:7,c:"#f0e2c4",cream:1,b:[["#c98a4a","ring",8,.13]]},
+"Мука=400 г;Вода=200 мл;Картофель=600 г;Лук=2 шт;Сливочное масло=40 г;Сметана=по вкусу;Соль=по вкусу",
+"Замесите тесто из муки, тёплой воды и соли, дайте отдохнуть 30 минут.|Сделайте пюре и смешайте с половиной обжаренного лука.|Раскатайте тесто, вырежьте кружки и положите начинку.|Защипните края полумесяцем.|Варите 5 минут после всплытия, подавайте с луком и сметаной."],
+["Хинкали","Пельмени и вареники","Грузинская",120,3,5,470,"dumplings",{shape:"khinkali",n:5,c:"#efe4cc",b:[["#222222","crumb",10,.035]]},
+"Мука=500 г;Фарш=600 г;Лук=2 шт;Кинза=1 пуч.;Зира=0.5 ч. л.;Вода=300 мл;Соль=по вкусу",
+"Замесите тугое тесто из муки, 200 мл воды и соли.|Смешайте фарш с луком, кинзой, зирой и 100 мл холодной воды.|Раскатайте кружки диаметром 12 см.|Положите начинку и собирайте складки к центру, закрутив хвостик.|Варите 12–15 минут. Едят руками, сначала выпивая бульон."],
+["Гёдза","Пельмени и вареники","Японская",60,2,4,330,"dumplings",{shape:"d",n:7,s:.85,c:"#e8cf98",pool:"#4a2a18",b:[["g2","ring",8,.08]]},
+"Тесто для гёдза=30 шт;Фарш=300 г;Капуста пекинская=200 г;Зелёный лук=3 пер.;Имбирь=1 ч. л.;Соевый соус=3 ст. л.;Чеснок=2 зуб.",
+"Мелко нарежьте капусту, посолите и отожмите.|Смешайте фарш с капустой, луком, имбирём, чесноком и ложкой соевого соуса.|Положите начинку на кружки теста и защипните складками.|Обжарьте донышки на масле 2 минуты.|Влейте 100 мл воды, накройте и готовьте 5 минут."],
+["Манты","Пельмени и вареники","Узбекская",120,3,6,480,"dumplings",{shape:"khinkali",n:5,c:"#f2e9d4",cream:1},
+"Мука=500 г;Вода=220 мл;Баранина=700 г;Лук=4 шт;Зира=1 ч. л.;Сливочное масло=30 г;Соль=по вкусу",
+"Замесите тесто и оставьте на 30 минут.|Нарубите мясо ножом мелко, смешайте с рубленым луком, зирой и солью.|Раскатайте квадраты 12×12 см и положите начинку.|Соедините углы и края, оставив небольшие отверстия.|Готовьте в мантоварке 40 минут."],
+
+["Ролл Филадельфия","Суши и роллы","Японская",60,3,2,520,"sushi",{outer:"#f08a5d",fill:["#f7f3ea","#8ab84a"]},
+"Рис=250 г;Рисовый уксус=3 ст. л.;Нори=2 л.;Лосось (филе)=200 г;Сливочный сыр=150 г;Огурцы=1 шт",
+"Промойте рис до чистой воды и сварите, затем смешайте с рисовым уксусом.|Положите нори на коврик, распределите рис и переверните рисом вниз.|Выложите полоску сыра и огурца.|Сверните ролл и обложите сверху тонкими ломтиками лосося.|Нарежьте влажным ножом на 8 частей."],
+["Ролл Калифорния","Суши и роллы","Японская",60,3,2,460,"sushi",{outer:"#f07c3c",fill:["#f0624a","#9ccc5a","#d8e8a0"]},
+"Рис=250 г;Рисовый уксус=3 ст. л.;Нори=2 л.;Крабовые палочки=150 г;Авокадо=1 шт;Огурцы=1 шт;Икра масаго=50 г;Майонез=2 ст. л.",
+"Приготовьте рис для суши.|Распределите рис по нори и переверните.|Выложите краб с майонезом, авокадо и огурец.|Сверните ролл и обваляйте в икре масаго.|Нарежьте на 8 частей."],
+["Маки с огурцом","Суши и роллы","Японская",40,2,2,280,"sushi",{outer:"#1d2a20",fill:["#7cb34a"]},
+"Рис=200 г;Рисовый уксус=2 ст. л.;Нори=2 л.;Огурцы=1 шт;Кунжут=1 ч. л.",
+"Приготовьте рис для суши и остудите.|Разрежьте нори пополам и положите на коврик.|Распределите рис тонким слоем, оставив край свободным.|Выложите огурец соломкой и плотно сверните.|Нарежьте на 6 частей."],
+
+["Блины на молоке","Завтраки","Русская",40,2,6,230,"pancakes",{n:12,t:.035,r:1.15,c:"#e6b35f",b:[["#b81f2c","ball",8,.13]]},
+"Молоко=500 мл;Мука=200 г;Яйца=2 шт;Сахар=1 ст. л.;Растительное масло=2 ст. л.;Соль=по вкусу",
+"Взбейте яйца с сахаром и солью.|Влейте половину молока и всыпьте муку, размешайте без комков.|Добавьте остальное молоко и масло, дайте тесту постоять 15 минут.|Жарьте тонкие блины на разогретой сковороде по минуте с каждой стороны."],
+["Сырники","Завтраки","Русская",30,1,3,340,"pancakes",{spread:1,c:"#d08b3c",r:.4,t:.2,n:5,cream:1,b:[["#c41e3a","ball",10,.13]]},
+"Творог=400 г;Яйца=1 шт;Мука=3 ст. л.;Сахар=2 ст. л.;Ванильный сахар=1 ч. л.;Сметана=по вкусу",
+"Разомните творог вилкой.|Добавьте яйцо, сахар, ванильный сахар и 2 ложки муки.|Сформируйте небольшие шайбы и обваляйте в оставшейся муке.|Обжарьте на среднем огне по 3 минуты с каждой стороны.|Подавайте со сметаной или вареньем."],
+["Американские панкейки","Завтраки","Американская",25,1,3,380,"pancakes",{n:5,t:.16,r:.95,c:"#d39a48",syrup:1,butter:1,b:[["#3b4f9a","ball",8,.11]]},
+"Мука=200 г;Молоко=250 мл;Яйца=2 шт;Сахар=2 ст. л.;Разрыхлитель=2 ч. л.;Сливочное масло=30 г;Кленовый сироп=по вкусу",
+"Смешайте муку, сахар и разрыхлитель.|Отдельно взбейте яйца с молоком и растопленным маслом.|Соедините, не добиваясь идеальной гладкости.|Жарьте на сухой сковороде, переворачивая, когда появятся пузырьки.|Подавайте стопкой с сиропом и ягодами."],
+["Омлет","Завтраки","Французская",10,1,1,280,"pan",{c:"#f2c94c",b:[["g2","ring",10,.08]]},
+"Яйца=3 шт;Молоко=50 мл;Сливочное масло=10 г;Зелёный лук=по вкусу;Соль=по вкусу",
+"Взбейте яйца с молоком и солью вилкой.|Растопите масло на сковороде на среднем огне.|Вылейте смесь и подтягивайте края к центру лопаткой.|Когда верх почти схватится, сложите омлет пополам.|Посыпьте зелёным луком."],
+["Шакшука","Завтраки","Израильская",30,1,2,310,"pan",{c:"#c7402a",eggs:4,b:[["g1","leaf",8,.13],["#f2e6c8","crumb",6,.13]]},
+"Яйца=4 шт;Помидоры=5 шт;Болгарский перец=1 шт;Лук=1 шт;Чеснок=2 зуб.;Паприка=1 ч. л.;Кумин=0.5 ч. л.;Соль=по вкусу",
+"Обжарьте лук, перец и чеснок 5 минут.|Добавьте нарезанные помидоры, паприку и кумин, тушите 10 минут.|Сделайте в соусе 4 углубления и вбейте в них яйца.|Накройте крышкой и готовьте 5–7 минут, пока белок не схватится."],
+["Английский завтрак","Завтраки","Британская",30,1,2,720,"eggs",{items:["egg","bacon","sausage","beans","toast","tomato","mushroom"]},
+"Яйца=2 шт;Бекон=4 ломт.;Сосиски=4 шт;Фасоль в томате=200 г;Шампиньоны=100 г;Помидоры=1 шт;Хлеб=2 ломт.;Соль=по вкусу",
+"Обжарьте сосиски со всех сторон 10 минут.|На той же сковороде поджарьте бекон, грибы и половинки помидора.|Прогрейте фасоль в сотейнике.|Поджарьте хлеб и яйца-глазунью.|Разложите всё на тарелке."],
+["Овсяная каша с ягодами","Завтраки","Русская",10,1,1,290,"soup",{c:"#efe2c4",b:[["#b3192f","ball",8,.13],["#3b4f9a","ball",8,.11],["#f6d36a","disc",5,.24]]},
+"Овсяные хлопья=60 г;Молоко=200 мл;Мёд=1 ч. л.;Ягоды=50 г;Сливочное масло=10 г;Соль=по вкусу",
+"Доведите молоко до кипения со щепоткой соли.|Всыпьте хлопья и варите 5 минут, помешивая.|Снимите с огня и добавьте масло.|Выложите в тарелку, добавьте мёд, ягоды и банан."],
+["Яйца Бенедикт","Завтраки","Американская",30,3,2,520,"eggs",{items:["benedict"]},
+"Яйца=4 шт;Английские маффины=2 шт;Бекон=4 ломт.;Сливочное масло=100 г;Лимон=0.5 шт;Уксус 9%=1 ст. л.;Соль=по вкусу",
+"Для соуса взбивайте 2 желтка с лимонным соком на водяной бане, тонкой струйкой вливая растопленное масло.|Подрумяньте разрезанные маффины и бекон.|Доведите воду с уксусом до лёгкого кипения и закрутите воронку.|Вылейте яйцо в центр и варите 3 минуты.|Соберите: маффин, бекон, яйцо, соус."],
+
+["Торт Наполеон","Десерты","Русская",180,3,10,450,"cake",{layers:[["#e2b46a",.06],["#f7efd8",.1],["#e2b46a",.06],["#f7efd8",.1],["#e2b46a",.06],["#f7efd8",.1],["#e2b46a",.06],["#f7efd8",.1],["#e8c48a",.07]],top:[["#d9a85a","crumb",30,.08]]},
+"Мука=500 г;Сливочное масло=450 г;Вода=200 мл;Молоко=1 л;Сахар=250 г;Яйца=3 шт;Ванильный сахар=1 ч. л.",
+"Порубите 250 г холодного масла с мукой, добавьте ледяную воду и яйцо, соберите тесто.|Разделите на 8 частей и охладите 1 час.|Раскатайте тонкие коржи и выпекайте по 7 минут при 200 °C.|Сварите заварной крем из молока, яиц, сахара и муки, остудите и взбейте с остальным маслом.|Соберите торт, промазывая коржи кремом, посыпьте крошкой и уберите на ночь в холодильник."],
+["Медовик","Десерты","Русская",150,3,10,420,"cake",{layers:[["#c98a3c",.07],["#f5ead2",.07],["#c98a3c",.07],["#f5ead2",.07],["#c98a3c",.07],["#f5ead2",.07],["#c98a3c",.07],["#f5ead2",.07],["#c98a3c",.07]],top:[["#b9772f","crumb",30,.08]]},
+"Мёд=3 ст. л.;Мука=450 г;Сахар=200 г;Яйца=3 шт;Сливочное масло=100 г;Сода=1 ч. л.;Сметана=800 г;Сахарная пудра=150 г",
+"Растопите на водяной бане мёд, сахар и масло, добавьте соду — масса вспенится.|Вмешайте яйца, затем муку.|Разделите тесто на 8 частей, раскатайте коржи и выпекайте по 5 минут при 180 °C.|Взбейте сметану с сахарной пудрой.|Соберите торт, обсыпьте крошкой и дайте пропитаться 8 часов."],
+["Чизкейк Нью-Йорк","Десерты","Американская",90,2,10,480,"cake",{layers:[["#b07a42",.16],["#f7ecd0",.75],["#b3192f",.04]],ring:[["#c41e3a","ball",10,.16]]},
+"Сливочный сыр=600 г;Песочное печенье=250 г;Сливочное масло=100 г;Сахар=180 г;Яйца=3 шт;Сливки 33%=200 мл;Ягоды=по вкусу",
+"Измельчите печенье, смешайте с растопленным маслом и утрамбуйте в форму.|Смешайте сыр с сахаром на низкой скорости.|По одному вмешайте яйца, затем сливки.|Выпекайте на водяной бане 1 час при 160 °C.|Остудите в духовке с приоткрытой дверцей и уберите в холодильник на ночь."],
+["Тирамису","Десерты","Итальянская",30,2,6,430,"cake",{square:1,layers:[["#6b4123",.18],["#f4ead4",.25],["#6b4123",.18],["#f4ead4",.25],["#4a2c1a",.02]],top:[["#4a2c1a","crumb",24,.06]]},
+"Маскарпоне=500 г;Яйца=4 шт;Сахар=100 г;Печенье савоярди=250 г;Кофе эспрессо=300 мл;Какао=2 ст. л.",
+"Взбейте желтки с сахаром до светлой массы и вмешайте маскарпоне.|Взбейте белки в крепкую пену и аккуратно соедините с кремом.|Быстро обмакивайте печенье в остывший кофе и выкладывайте слоем.|Чередуйте слои печенья и крема.|Уберите в холодильник на 6 часов и посыпьте какао."],
+["Брауни","Десерты","Американская",45,1,9,410,"cake",{square:1,layers:[["#3b2216",.45]],top:[["#5a3626","crumb",14,.1]]},
+"Тёмный шоколад=200 г;Сливочное масло=150 г;Сахар=200 г;Яйца=3 шт;Мука=80 г;Какао=2 ст. л.;Соль=по вкусу",
+"Растопите шоколад с маслом.|Взбейте яйца с сахаром 2 минуты.|Соедините с шоколадом, добавьте муку, какао и щепотку соли.|Вылейте в форму 20×20 см.|Выпекайте 25 минут при 180 °C — центр должен остаться влажным."],
+["Панна котта","Десерты","Итальянская",20,1,4,320,"drink",{h:1.3,layers:[["#f8f3e6",.8],["#b3192f",.18]],top:[["#c41e3a","ball",3,.2]],mint:1},
+"Сливки 33%=500 мл;Сахар=60 г;Желатин=10 г;Ванильный сахар=1 ч. л.;Ягоды=150 г",
+"Замочите желатин в холодной воде на 10 минут.|Нагрейте сливки с сахаром и ванилью, не доводя до кипения.|Растворите в них отжатый желатин.|Разлейте по стаканам и уберите в холодильник на 4 часа.|Сверху выложите ягодный соус."],
+["Печенье с шоколадной крошкой","Десерты","Американская",30,1,20,150,"cookies",{c:"#c98f4a",chip:"#3b2216"},
+"Мука=250 г;Сливочное масло=150 г;Сахар=150 г;Яйца=1 шт;Тёмный шоколад=150 г;Разрыхлитель=1 ч. л.;Соль=по вкусу",
+"Взбейте мягкое масло с сахаром.|Добавьте яйцо, затем муку с разрыхлителем и щепоткой соли.|Вмешайте рубленый шоколад.|Выложите шарики на противень на расстоянии друг от друга.|Выпекайте 10–12 минут при 180 °C — печенье дойдёт при остывании."],
+["Шоколадный фондан","Десерты","Французская",25,2,4,460,"cake",{r:.7,layers:[["#3b2216",.7]],top:[["#f8f5ee","crumb",20,.05]],ring:[["#c41e3a","ball",6,.14]]},
+"Тёмный шоколад=150 г;Сливочное масло=100 г;Яйца=3 шт;Сахар=80 г;Мука=40 г",
+"Растопите шоколад с маслом.|Взбейте яйца с сахаром и соедините с шоколадом.|Вмешайте муку.|Разлейте по смазанным формочкам.|Выпекайте 8–9 минут при 200 °C — внутри должен остаться жидкий центр."],
+["Морковный торт","Десерты","Американская",90,2,10,430,"cake",{layers:[["#c8843e",.28],["#f6f0e2",.08],["#c8843e",.28],["#f6f0e2",.1]],ring:[["#9b6a3c","crumb",8,.16]]},
+"Морковь=300 г;Мука=250 г;Сахар=200 г;Яйца=3 шт;Растительное масло=180 мл;Грецкие орехи=80 г;Корица=1 ч. л.;Сливочный сыр=300 г;Сахарная пудра=100 г",
+"Взбейте яйца с сахаром и маслом.|Добавьте тёртую морковь, орехи, корицу и муку с разрыхлителем.|Выпекайте два коржа по 35 минут при 175 °C.|Взбейте сливочный сыр с сахарной пудрой.|Соберите торт и украсьте орехами."],
+
+["Брускетта с помидорами","Закуски","Итальянская",15,1,4,150,"snack",{bread:"#e0b46a",top:[["red","cube",8,.15],["g1","leaf",3,.16]]},
+"Багет=1 шт;Помидоры=3 шт;Чеснок=1 зуб.;Базилик=0.5 пуч.;Оливковое масло=3 ст. л.;Соль=по вкусу",
+"Нарежьте багет ломтиками и подсушите на сковороде или в духовке.|Натрите горячий хлеб разрезанным чесноком.|Нарежьте помидоры мелкими кубиками и смешайте с маслом, солью и базиликом.|Выложите помидоры на хлеб перед подачей."],
+["Гуакамоле","Закуски","Мексиканская",10,1,4,260,"soup",{c:"#8bb04a",b:[["red","cube",6,.11],["wh","cube",4,.09],["#e8c75a","crumb",5,.3]]},
+"Авокадо=3 шт;Лайм=1 шт;Помидоры=1 шт;Красный лук=0.5 шт;Кинза=0.5 пуч.;Кукурузные чипсы=150 г;Соль=по вкусу",
+"Разомните мякоть авокадо вилкой.|Сразу добавьте сок лайма, чтобы не потемнело.|Вмешайте мелко нарезанные помидор, лук и кинзу.|Посолите и подавайте с чипсами."],
+["Хумус","Закуски","Ближневосточная",20,1,6,210,"soup",{c:"#e3cfa0",b:[["#c8452a","crumb",12,.05],["#e6c98a","ball",6,.15],["g1","leaf",3,.12]]},
+"Нут=400 г;Тахини=4 ст. л.;Лимон=1 шт;Чеснок=2 зуб.;Оливковое масло=4 ст. л.;Паприка=по вкусу;Соль=по вкусу",
+"Слейте жидкость с нута, оставив немного.|Пробейте нут блендером с тахини, соком лимона и чесноком.|Добавляйте жидкость от нута до кремовой консистенции.|Выложите в тарелку, полейте маслом и посыпьте паприкой."],
+["Фаршированные яйца","Закуски","Русская",25,1,6,140,"snack",{kind:"eggs"},
+"Яйца=6 шт;Майонез=2 ст. л.;Горчица=1 ч. л.;Зелень=по вкусу;Паприка=по вкусу;Соль=по вкусу",
+"Сварите яйца вкрутую, остудите и очистите.|Разрежьте пополам и достаньте желтки.|Разомните желтки с майонезом, горчицей и солью.|Наполните белки начинкой и украсьте зеленью и паприкой."],
+["Бутерброды с красной рыбой","Закуски","Русская",10,1,4,220,"snack",{bread:"#e7c38a",spread:"#f6ecc8",top:[["sal","leaf",2,.5],["dill","leaf",2,.14]]},
+"Хлеб=8 ломт.;Сливочное масло=50 г;Лосось (филе)=150 г;Укроп=по вкусу;Лимон=0.5 шт",
+"Подсушите хлеб в тостере.|Смажьте тонким слоем мягкого масла.|Выложите тонкие ломтики слабосолёного лосося.|Украсьте веточкой укропа и долькой лимона."],
+["Овощи гриль","Закуски","Средиземноморская",30,1,4,140,"skewer",{chunks:["#e8c33a","#c8352b","#5a8a2c","#b89a78","#6b2f5a"],b:[["g1","leaf",6,.18]]},
+"Кабачок=1 шт;Баклажан=1 шт;Болгарский перец=2 шт;Шампиньоны=200 г;Оливковое масло=3 ст. л.;Чеснок=2 зуб.;Соль=по вкусу",
+"Нарежьте овощи крупными кусками.|Смешайте с маслом, чесноком и солью.|Нанижите на шпажки, чередуя.|Жарьте на гриле или сковороде-гриль 10–12 минут, переворачивая."],
+
+["Глинтвейн безалкогольный","Напитки","Европейская",20,1,4,140,"drink",{mug:1,c:"#7a1d2a",top:[["or","disc",2,.44],["#6b3f22","stick",1,.5]]},
+"Виноградный сок=1 л;Апельсин=1 шт;Корица=1 шт;Гвоздика=4 шт;Мёд=2 ст. л.",
+"Влейте сок в кастрюлю и добавьте кружки апельсина, корицу и гвоздику.|Нагревайте 10 минут, не доводя до кипения.|Снимите с огня и вмешайте мёд.|Дайте настояться 5 минут и разлейте по кружкам."],
+["Домашний лимонад","Напитки","Европейская",10,1,4,90,"drink",{c:"#f3e27a",ice:1,slice:"#f2d23a",mint:1},
+"Лимон=3 шт;Сахар=100 г;Газированная вода=1 л;Мята=0.5 пуч.;Лёд=по вкусу",
+"Сварите сироп из сахара и 100 мл воды и остудите.|Выжмите сок лимонов.|Смешайте сироп, сок и газированную воду.|Добавьте мяту и лёд."],
+["Клюквенный морс","Напитки","Русская",20,1,6,70,"drink",{c:"#b3192f",top:[["#c41e3a","ball",5,.18]]},
+"Клюква=300 г;Сахар=120 г;Вода=1.5 л",
+"Разомните клюкву и отожмите сок, уберите его в холодильник.|Залейте жмых водой, доведите до кипения и варите 5 минут.|Процедите отвар и растворите в нём сахар.|Остудите и смешайте с соком."],
+["Смузи банан и клубника","Напитки","Международная",5,1,2,180,"drink",{c:"#f08aa0",straw:"#f25b7a",top:[["#c41e3a","ball",3,.2]]},
+"Бананы=1 шт;Клубника=200 г;Йогурт=200 г;Молоко=100 мл;Мёд=1 ч. л.",
+"Очистите банан и удалите хвостики клубники.|Сложите всё в блендер.|Взбейте до однородности 1 минуту.|Разлейте по стаканам."],
+["Какао с маршмеллоу","Напитки","Американская",10,1,2,220,"drink",{mug:1,c:"#6b4123",top:[["#fbf7ef","cube",8,.2]]},
+"Молоко=500 мл;Какао=2 ст. л.;Сахар=2 ст. л.;Маршмеллоу=по вкусу",
+"Смешайте какао с сахаром и парой ложек молока до пасты.|Нагрейте остальное молоко.|Влейте пасту и прогрейте, помешивая, 2 минуты.|Разлейте по кружкам и добавьте маршмеллоу."],
+["Мохито безалкогольный","Напитки","Кубинская",10,1,2,80,"drink",{c:"#e6f2c8",ice:1,slice:"#9ccc4a",mint:1},
+"Лайм=1 шт;Мята=1 пуч.;Сахар=2 ст. л.;Газированная вода=400 мл;Лёд=по вкусу",
+"Нарежьте лайм дольками и положите в стаканы с сахаром и мятой.|Слегка разомните толкушкой.|Заполните стаканы льдом.|Долейте газированную воду и перемешайте."],
+["Матча латте","Напитки","Японская",5,1,1,150,"drink",{mug:1,c:"#9cbf5a"},
+"Матча=1 ч. л.;Молоко=250 мл;Мёд=1 ч. л.;Вода=50 мл",
+"Просейте матчу в чашку.|Влейте горячую воду (около 80 °C) и взбейте венчиком до пены.|Нагрейте и вспеньте молоко.|Влейте молоко в матчу и добавьте мёд."]
+];
+
+</script>
+<script>
+// ===== Данные =====
+const CATS = ["Супы","Салаты","Мясо и птица","Рыба и морепродукты","Паста и лапша","Гарниры и крупы","Пицца и выпечка","Пельмени и вареники","Суши и роллы","Завтраки","Десерты","Закуски","Напитки"];
+const STAPLES = new Set(["соль","перец чёрный","вода","растительное масло","лёд","сахар"]);
+const key = n => n.toLowerCase().replace(/\(.*?\)/g, "").replace(/\d+\s*%/g, "").replace(/\s+/g, " ").trim();
+const RECIPES = RAW.map((r, i) => ({
+  id: i + 1, name: r[0], cat: r[1], cuisine: r[2], time: r[3], diff: r[4], serv: r[5], kcal: r[6], model: r[7], o: r[8],
+  ing: r[9].split(";").map(s => { const [n, q] = s.split("="); const m = /^([\d.]+)\s*(.*)$/.exec((q || "").trim()); return {n: n.trim(), k: key(n), q: m ? +m[1] : null, u: m ? m[2] : (q || "по вкусу").trim()}; }),
+  steps: r[10].split("|")
+}));
+RECIPES.forEach(r => r.search = (r.name + " " + r.cuisine + " " + r.cat + " " + r.ing.map(i => i.n).join(" ")).toLowerCase().replace(/ё/g, "е"));
+const BY_ID = new Map(RECIPES.map(r => [r.id, r]));
+const ING_NAMES = new Map(); const ING_FREQ = new Map();
+RECIPES.forEach(r => r.ing.forEach(i => { if (STAPLES.has(i.k)) return; if (!ING_NAMES.has(i.k)) ING_NAMES.set(i.k, i.n.replace(/\(.*?\)/g, "").replace(/\d+\s*%/g, "").trim()); ING_FREQ.set(i.k, (ING_FREQ.get(i.k) || 0) + 1); }));
+
+// ===== Состояние =====
+const store = {get(k, d) { try { const v = localStorage.getItem("rcp:" + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem("rcp:" + k, JSON.stringify(v)); } catch (e) {} }};
+const S = {q: "", cat: "", cuisine: "", time: 0, diff: 0, sort: "pop", favOnly: false, pantry: new Set(store.get("pantry", [])), favs: new Set(store.get("favs", [])), limit: 24};
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const fmtTime = m => m < 60 ? m + " мин" : Math.floor(m / 60) + " ч" + (m % 60 ? " " + m % 60 + " мин" : "");
+const DIFF = ["", "Просто", "Средне", "Сложно"];
+const plural = (n, a, b, c) => { const m10 = n % 10, m100 = n % 100; return n + " " + (m10 === 1 && m100 !== 11 ? a : m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20) ? b : c); };
+const ICON_T = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+const ICON_K = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3c1 4 5 5.5 5 10a5 5 0 0 1-10 0c0-2.5 1.5-4 2.5-5 .3 2 1.2 3 2.5 3-1-3 0-6 0-8z"/></svg>';
+const HEART = '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.5-9.3C1 8.2 3.4 4.5 7 4.5c2 0 3.4 1.1 5 3 1.6-1.9 3-3 5-3 3.6 0 6 3.7 4.5 7.2C19.5 16.4 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+const diffBars = d => '<span class="diff" aria-label="Сложность: ' + DIFF[d] + '">' + [1, 2, 3].map(i => '<i class="' + (i <= d ? "on" : "") + '"></i>').join("") + '</span>';
+function toast(t) { const el = $("#toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 1800); }
+
+function coverage(r) {
+  const need = r.ing.filter(i => i.q !== null && !STAPLES.has(i.k));
+  const have = need.filter(i => S.pantry.has(i.k));
+  return {have: have.length, total: need.length, missing: need.filter(i => !S.pantry.has(i.k)).map(i => ING_NAMES.get(i.k) || i.n)};
+}
+
+// ===== Первый экран =====
+const HERO_RECIPE = RECIPES.find(r => r.name === "Пицца Маргарита");
+function initHero() {
+  $("#heroOpen").addEventListener("click", () => openRecipe(HERO_RECIPE.id));
+  $("#heroReset").addEventListener("click", () => window.heroResetView && window.heroResetView());
+  $("#heroSub").textContent = HERO_RECIPE.cuisine + " кухня · " + fmtTime(HERO_RECIPE.time) + " · " + HERO_RECIPE.kcal + " ккал";
+  $("#quick").insertAdjacentHTML("beforeend", ["Борщ", "Паста карбонара", "Сырники", "Том ям", "Тирамису", "Плов узбекский"].map(n => { const r = RECIPES.find(x => x.name === n); return r ? '<button class="tag" type="button" data-id="' + r.id + '">' + esc(r.name) + '</button>' : ""; }).join(""));
+  $("#quick").addEventListener("click", e => { const b = e.target.closest(".tag"); if (b) openRecipe(+b.dataset.id); });
+  const cuisines = new Set(RECIPES.map(r => r.cuisine));
+  $("#stats").innerHTML = [[RECIPES.length, "рецептов"], [cuisines.size, "кухонь мира"], [ING_NAMES.size, "продуктов в базе"]].map(([n, t]) => "<div><b>" + n + "</b><span>" + t + "</span></div>").join("");
+  const go = () => { S.q = $("#heroSearch").value.trim(); $("#q").value = S.q; S.limit = 24; render(); $("#catalog").scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"}); };
+  $("#heroGo").addEventListener("click", go); $("#heroSearch").addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+}
+// Цвет карточки по категории
+const TINT = {"Супы": "#e8792b", "Салаты": "#6fa043", "Мясо и птица": "#b5482c", "Рыба и морепродукты": "#3e8fb0", "Паста и лапша": "#e3b33c", "Гарниры и крупы": "#c99a4a", "Пицца и выпечка": "#d26a2e", "Пельмени и вареники": "#b89a6a", "Суши и роллы": "#d9665a", "Завтраки": "#f0a830", "Десерты": "#b0567a", "Закуски": "#7a9a3a", "Напитки": "#4a9a8a"};
+
+// ===== Холодильник =====
+function renderPantry() {
+  const top = [...ING_FREQ.entries()].sort((a, b) => b[1] - a[1]).slice(0, 34).map(e => e[0]);
+  const extra = [...S.pantry].filter(k => !top.includes(k));
+  $("#pantryChips").innerHTML = [...extra, ...top].map(k => '<button class="chip" type="button" data-k="' + esc(k) + '" aria-pressed="' + S.pantry.has(k) + '">' + esc(ING_NAMES.get(k) || k) + '</button>').join("");
+  const n = S.pantry.size;
+  if (!n) $("#pantryNote").textContent = "Пока ничего не отмечено. Каталог показывает все рецепты.";
+  else { const full = RECIPES.filter(r => { const c = coverage(r); return c.total && c.have === c.total; }).length; const near = RECIPES.filter(r => { const c = coverage(r); return c.total - c.have === 1; }).length;
+    $("#pantryNote").innerHTML = "Отмечено " + plural(n, "продукт", "продукта", "продуктов") + ". Можно приготовить без покупок: <b>" + full + "</b>, докупить один продукт: <b>" + near + "</b>."; }
+  store.set("pantry", [...S.pantry]);
+}
+function initPantry() {
+  $("#ingList").innerHTML = [...ING_NAMES.values()].sort((a, b) => a.localeCompare(b, "ru")).map(n => '<option value="' + esc(n) + '">').join("");
+  $("#pantryChips").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; const k = b.dataset.k; S.pantry.has(k) ? S.pantry.delete(k) : S.pantry.add(k); renderPantry(); S.limit = 24; render(); });
+  const addIt = () => { const v = key($("#pantryInput").value); if (!v) return; let k = ING_NAMES.has(v) ? v : [...ING_NAMES.keys()].find(x => x.startsWith(v) || x.includes(v));
+    if (!k) { toast("Такого продукта нет ни в одном рецепте"); return; } S.pantry.add(k); $("#pantryInput").value = ""; renderPantry(); S.limit = 24; render(); };
+  $("#pantryAdd").addEventListener("click", addIt); $("#pantryInput").addEventListener("keydown", e => { if (e.key === "Enter") addIt(); });
+  $("#pantryClear").addEventListener("click", () => { S.pantry.clear(); renderPantry(); render(); });
+  renderPantry();
+}
+
+// ===== Каталог =====
+function filtered() {
+  const q = S.q.toLowerCase().replace(/ё/g, "е").split(/\s+/).filter(Boolean);
+  let list = RECIPES.filter(r => (!S.cat || r.cat === S.cat) && (!S.cuisine || r.cuisine === S.cuisine) && (!S.time || r.time <= S.time) && (!S.diff || r.diff === S.diff) && (!S.favOnly || S.favs.has(r.id)) && q.every(w => r.search.includes(w)));
+  if (S.pantry.size) {
+    list = list.map(r => ({r, c: coverage(r)})).filter(x => x.c.have > 0).sort((a, b) => (a.c.total - a.c.have) - (b.c.total - b.c.have) || b.c.have / b.c.total - a.c.have / a.c.total || a.r.time - b.r.time).map(x => x.r);
+  } else {
+    const f = {pop: (a, b) => a.id - b.id, time: (a, b) => a.time - b.time, kcal: (a, b) => a.kcal - b.kcal, az: (a, b) => a.name.localeCompare(b.name, "ru")}[S.sort];
+    list.sort(f);
+  }
+  return list;
+}
+let CURRENT = [];
+function cardHTML(r) {
+  let match = "";
+  if (S.pantry.size) { const c = coverage(r); const miss = c.total - c.have; match = '<div class="match">' + (miss ? "Не хватает: " + plural(miss, "продукт", "продукта", "продуктов") : "Всё есть!") + '<div class="bar"><i style="width:' + Math.round(c.have / c.total * 100) + '%"></i></div>' + (miss ? "<small>" + esc(c.missing.slice(0, 3).join(", ")) + (miss > 3 ? "…" : "") + "</small>" : "") + '</div>'; }
+  return '<article class="card"><button class="card-open" type="button" data-id="' + r.id + '" aria-label="Открыть рецепт: ' + esc(r.name) + '">' +
+    '<div class="thumb" style="--tint:' + (TINT[r.cat] || "#888") + '"><span class="ph" aria-hidden="true">' + esc(r.name[0]) + '</span><span class="pill">' + esc(r.cat) + '</span></div>' +
+    '<div class="card-body"><h3>' + esc(r.name) + '</h3><p class="cuisine">' + esc(r.cuisine) + ' кухня</p>' + match +
+    '<div class="facts"><span>' + ICON_T + fmtTime(r.time) + '</span><span>' + ICON_K + r.kcal + ' ккал</span><span>' + diffBars(r.diff) + DIFF[r.diff] + '</span></div></div></button>' +
+    '<button class="fav" type="button" data-fav="' + r.id + '" aria-pressed="' + S.favs.has(r.id) + '" aria-label="В избранное: ' + esc(r.name) + '">' + HEART + '</button></article>';
+}
+function render() {
+  CURRENT = filtered(); const shown = CURRENT.slice(0, S.limit);
+  $("#grid").innerHTML = shown.length ? shown.map(cardHTML).join("") : '<div class="empty"><h3>Ничего не нашлось</h3><p>Попробуйте другое слово или снимите часть фильтров.</p><button class="btn" type="button" id="resetAll">Сбросить фильтры</button></div>';
+  $("#moreBtn").hidden = CURRENT.length <= S.limit;
+  $("#count").textContent = CURRENT.length === RECIPES.length ? plural(RECIPES.length, "рецепт", "рецепта", "рецептов") : "Найдено: " + plural(CURRENT.length, "рецепт", "рецепта", "рецептов") + " из " + RECIPES.length;
+  const ra = $("#resetAll"); if (ra) ra.addEventListener("click", resetFilters);
+}
+function resetFilters() { Object.assign(S, {q: "", cat: "", cuisine: "", time: 0, diff: 0, favOnly: false, limit: 24}); $("#q").value = ""; $("#heroSearch").value = ""; $("#cuisine").value = ""; $("#time").value = "0"; $("#diff").value = "0"; $("#favOnly").setAttribute("aria-pressed", "false"); renderCats(); render(); }
+function renderCats() {
+  const counts = {}; RECIPES.forEach(r => counts[r.cat] = (counts[r.cat] || 0) + 1);
+  $("#cats").innerHTML = [["", "Все", RECIPES.length], ...CATS.map(c => [c, c, counts[c] || 0])].map(([v, t, n]) => '<button type="button" data-cat="' + esc(v) + '" aria-pressed="' + (S.cat === v) + '">' + esc(t) + "<small>" + n + "</small></button>").join("");
+}
+function toggleFav(id) { S.favs.has(id) ? S.favs.delete(id) : S.favs.add(id); store.set("favs", [...S.favs]); document.querySelectorAll('[data-fav="' + id + '"]').forEach(b => b.setAttribute("aria-pressed", S.favs.has(id))); if (OPEN && OPEN.id === id) $("#dFav").setAttribute("aria-pressed", S.favs.has(id)); toast(S.favs.has(id) ? "Добавлено в избранное" : "Убрано из избранного"); if (S.favOnly) render(); }
+function initCatalog() {
+  renderCats();
+  $("#cuisine").innerHTML = '<option value="">Любая кухня</option>' + [...new Set(RECIPES.map(r => r.cuisine))].sort((a, b) => a.localeCompare(b, "ru")).map(c => '<option>' + esc(c) + '</option>').join("");
+  $("#cats").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; S.cat = b.dataset.cat; S.limit = 24; renderCats(); render(); });
+  let t; $("#q").addEventListener("input", e => { clearTimeout(t); t = setTimeout(() => { S.q = e.target.value.trim(); S.limit = 24; render(); }, 150); });
+  [["cuisine", v => v], ["time", v => +v], ["diff", v => +v], ["sort", v => v]].forEach(([id, f]) => $("#" + id).addEventListener("change", e => { S[id] = f(e.target.value); S.limit = 24; render(); }));
+  $("#favOnly").addEventListener("click", e => { S.favOnly = !S.favOnly; e.currentTarget.setAttribute("aria-pressed", S.favOnly); render(); });
+  $("#moreBtn").addEventListener("click", () => { S.limit += 24; render(); });
+  $("#grid").addEventListener("click", e => { const f = e.target.closest("[data-fav]"); if (f) { toggleFav(+f.dataset.fav); return; } const c = e.target.closest(".card-open"); if (c) openRecipe(+c.dataset.id); });
+  $("#randomBtn").addEventListener("click", () => openRecipe(RECIPES[Math.floor(Math.random() * RECIPES.length)].id));
+  render();
+}
+
+// ===== Окно рецепта =====
+let OPEN = null, servings = 1;
+const FR = {.5: "½", .25: "¼", .75: "¾"};
+function fmtQ(q, u, f) {
+  let v = q * f;
+  if (/^(г|мл)$/.test(u) && v >= 1000) return String(Math.round(v / 50) / 20).replace(".", ",") + " " + (u === "г" ? "кг" : "л");
+  if (/^(г|мл)$/.test(u)) v = v >= 200 ? Math.round(v / 10) * 10 : v >= 20 ? Math.round(v / 5) * 5 : Math.max(1, Math.round(v));
+  else { v = Math.max(.5, Math.round(v * 2) / 2); }
+  const whole = Math.floor(v), frac = +(v - whole).toFixed(2);
+  return ((whole ? whole : "") + (FR[frac] || (frac ? String(frac).slice(1).replace(".", ",") : "")) || "0") + " " + u;
+}
+function renderIngredients() {
+  const f = servings / OPEN.serv;
+  $("#dIng").innerHTML = OPEN.ing.map((i, n) => '<li><label><input type="checkbox" data-i="' + n + '"><span>' + esc(i.n) + '</span>' + (S.pantry.has(i.k) ? '<span class="have">есть</span>' : "") + '</label><span class="q">' + (i.q === null ? esc(i.u) : fmtQ(i.q, i.u, f)) + '</span></li>').join("");
+  $("#servN").textContent = servings;
+}
+function renderProgress() { const all = $("#dSteps").children.length, d = $("#dSteps").querySelectorAll(".done").length; $("#dProgress").textContent = d ? "Готово " + d + " из " + all : plural(all, "шаг", "шага", "шагов"); }
+function openRecipe(id) {
+  const r = BY_ID.get(id); if (!r) return; OPEN = r; servings = r.serv;
+  $("#dCrumbs").textContent = r.cat + " · " + r.cuisine + " кухня";
+  $("#dName").textContent = r.name;
+  $("#dKpis").innerHTML = '<div class="kpi"><small>Время</small><b>' + fmtTime(r.time) + '</b></div><div class="kpi"><small>Сложность</small><b>' + DIFF[r.diff] + '</b></div><div class="kpi"><small>Ккал / порция</small><b>' + r.kcal + '</b></div>' +
+    '<div class="kpi"><small>Порции</small><div class="serv"><button type="button" id="servMinus" aria-label="Меньше порций">−</button><b id="servN"></b><button type="button" id="servPlus" aria-label="Больше порций">+</button></div></div>';
+  $("#servMinus").onclick = () => { if (servings > 1) { servings--; renderIngredients(); } };
+  $("#servPlus").onclick = () => { if (servings < 40) { servings++; renderIngredients(); } };
+  renderIngredients();
+  $("#dSteps").innerHTML = r.steps.map(s => '<li tabindex="0">' + esc(s) + '</li>').join(""); renderProgress();
+  $("#dFav").setAttribute("aria-pressed", S.favs.has(id));
+  $("#dBody").scrollTop = 0;
+  const dlg = $("#dlg"); if (!dlg.open) dlg.showModal();
+  $("#dBand").style.setProperty("--tint", TINT[r.cat] || "#888"); $("#dLetter").textContent = r.name[0];
+  if (window.heroPause) window.heroPause(true);
+  if (location.hash !== "#recipe-" + id) location.hash = "recipe-" + id;
+}
+function closeRecipe() { const dlg = $("#dlg"); if (dlg.open) dlg.close(); }
+function initDialog() {
+  const dlg = $("#dlg");
+  $("#dClose").addEventListener("click", closeRecipe);
+  dlg.addEventListener("click", e => { if (e.target === dlg) closeRecipe(); });
+  dlg.addEventListener("close", () => { OPEN = null; if (/^#recipe-/.test(location.hash)) { try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { location.hash = ""; } } if (window.heroPause) window.heroPause(false); });
+  $("#dFav").addEventListener("click", () => OPEN && toggleFav(OPEN.id));
+  $("#dIng").addEventListener("change", e => { const li = e.target.closest("li"); if (li) li.classList.toggle("done", e.target.checked); });
+  const stepToggle = li => { li.classList.toggle("done"); renderProgress(); };
+  $("#dSteps").addEventListener("click", e => { const li = e.target.closest("li"); if (li) stepToggle(li); });
+  $("#dSteps").addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches("li")) { e.preventDefault(); stepToggle(e.target); } });
+  $("#dCopy").addEventListener("click", async () => {
+    const f = servings / OPEN.serv; const text = OPEN.name + " — " + plural(servings, "порция", "порции", "порций") + "\n" + OPEN.ing.map(i => "• " + i.n + " — " + (i.q === null ? i.u : fmtQ(i.q, i.u, f))).join("\n");
+    try { await navigator.clipboard.writeText(text); toast("Список продуктов скопирован"); } catch (e) { toast("Не удалось скопировать: браузер запретил доступ к буферу"); }
+  });
+  const nav = d => { if (!OPEN) return; const list = CURRENT.length ? CURRENT : RECIPES; let i = list.findIndex(r => r.id === OPEN.id); if (i < 0) i = 0; openRecipe(list[(i + d + list.length) % list.length].id); };
+  $("#dPrev").addEventListener("click", () => nav(-1)); $("#dNext").addEventListener("click", () => nav(1));
+  window.addEventListener("hashchange", fromHash);
+}
+function fromHash() { const m = /^#recipe-(\d+)$/.exec(location.hash); if (m) { if (!OPEN || OPEN.id !== +m[1]) openRecipe(+m[1]); } else if (OPEN) closeRecipe(); }
+
+[initHero, initPantry, initCatalog, initDialog, fromHash].forEach(f => { try { f(); } catch (e) { console.error(e); } });
+</script>
+<script>
+// ===== Главная 3D-сцена: пицца Маргарита на деревянной доске =====
+(function () {
+  const canvas = document.getElementById("heroCanvas");
+  const fail = msg => { const st = document.getElementById("heroStage"); if (st) st.classList.add("no3d"); const f = document.getElementById("heroFallback"); if (f) f.hidden = false; if (msg) console.warn(msg); };
+  if (!window.THREE || !canvas) return fail("three.js не загрузился");
+  const T = THREE;
+  let renderer;
+  try { renderer = new T.WebGLRenderer({canvas, antialias: true, alpha: true, powerPreference: "high-performance"}); } catch (e) { return fail(e); }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.outputEncoding = T.sRGBEncoding;
+  renderer.toneMapping = T.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = T.PCFSoftShadowMap;
+  const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const ANISO = renderer.capabilities.getMaxAnisotropy();
+
+  // ---------- утилиты ----------
+  let seed = 20261106;
+  const R = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+  const C = h => new T.Color(h).convertSRGBToLinear();
+  const cv = (w, h, draw) => { const c = document.createElement("canvas"); c.width = w; c.height = h; draw(c.getContext("2d"), w, h); return c; };
+  const tex = (c, srgb = true) => { const t = new T.CanvasTexture(c); if (srgb) t.encoding = T.sRGBEncoding; t.anisotropy = ANISO; t.wrapS = t.wrapT = T.RepeatWrapping; return t; };
+  // мягкое пятно; sx — сжатие по горизонтали (для развёрток, где пиксели не квадратные)
+  function spot(x, cx, cy, r, rgb, a, sx = 1) {
+    x.save(); x.setTransform(sx, 0, 0, 1, cx, cy);
+    const g = x.createRadialGradient(0, 0, 0, 0, 0, r); g.addColorStop(0, `rgba(${rgb},${a})`); g.addColorStop(.55, `rgba(${rgb},${a * .55})`); g.addColorStop(1, `rgba(${rgb},0)`);
+    x.fillStyle = g; x.beginPath(); x.arc(0, 0, r, 0, Math.PI * 2); x.fill(); x.restore();
+  }
+  function grain(x, w, h, amt) { const d = x.getImageData(0, 0, w, h); for (let i = 0; i < d.data.length; i += 4) { const n = (R() - .5) * amt; d.data[i] += n; d.data[i + 1] += n; d.data[i + 2] += n; } x.putImageData(d, 0, 0); }
+
+  // ---------- сцена, окружение, свет ----------
+  const scene = new T.Scene();
+  const cam = new T.PerspectiveCamera(30, 1, .1, 100);
+  (function env() {
+    const s = new T.Scene();
+    s.add(new T.Mesh(new T.BoxGeometry(24, 14, 24), new T.MeshBasicMaterial({color: C("#3b3530"), side: T.BackSide})));
+    const panel = (w, h, col, k, pos, rot) => { const m = new T.Mesh(new T.PlaneGeometry(w, h), new T.MeshBasicMaterial({color: C(col).multiplyScalar(k), side: T.DoubleSide})); m.position.set(...pos); m.rotation.set(...rot); s.add(m); };
+    panel(12, 7, "#fff1de", 5, [0, 6.9, 0], [Math.PI / 2, 0, 0]);       // большой софтбокс сверху
+    panel(6, 7, "#ffd9ad", 3, [-11.9, 2, 3], [0, Math.PI / 2, 0]);     // тёплое окно слева
+    panel(5, 4, "#d5e4ff", 1.8, [11.9, 1.5, -4], [0, -Math.PI / 2, 0]); // холодная подсветка справа
+    panel(10, 3, "#ffffff", 1.2, [0, 1.5, -11.9], [0, 0, 0]);
+    const pm = new T.PMREMGenerator(renderer); scene.environment = pm.fromScene(s, .04).texture; pm.dispose();
+  })();
+  const key = new T.DirectionalLight(C("#fff0dc"), 2.6); key.position.set(-3.5, 7, 3.5); key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, {left: -3.6, right: 3.6, top: 3.6, bottom: -3.6, near: 1, far: 20});
+  key.shadow.bias = -.0004; if ("normalBias" in key.shadow) key.shadow.normalBias = .015; scene.add(key);
+  const rim = new T.DirectionalLight(C("#dce8ff"), 1.2); rim.position.set(4.5, 3, -5.5); scene.add(rim);
+  scene.add(new T.HemisphereLight(C("#fff6ea"), C("#6b5a48"), .35));
+  const ground = new T.Mesh(new T.PlaneGeometry(40, 40), new T.ShadowMaterial({opacity: .22})); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+
+  const world = new T.Group(); scene.add(world);
+
+  // ---------- деревянная доска ----------
+  const woodC = cv(1024, 1024, (x, w, h) => {
+    x.fillStyle = "#b9834f"; x.fillRect(0, 0, w, h);
+    for (let i = 0; i < 300; i++) {
+      const y = R() * h, amp = 3 + R() * 12, f = .003 + R() * .008, ph = R() * 6;
+      x.strokeStyle = R() < .55 ? `rgba(92,50,20,${.04 + R() * .16})` : `rgba(236,190,130,${.04 + R() * .12})`;
+      x.lineWidth = .5 + R() * 2.6; x.beginPath();
+      for (let X = -8; X <= w + 8; X += 8) { const Y = y + Math.sin(X * f + ph) * amp + Math.sin(X * f * 3.3 + ph * 2) * amp * .25; X < 0 ? x.moveTo(X, Y) : x.lineTo(X, Y); }
+      x.stroke();
+    }
+    for (let i = 0; i < 3; i++) { const cx = R() * w, cy = R() * h; for (let k = 6; k > 0; k--) { x.strokeStyle = `rgba(80,40,15,${.08 + k * .02})`; x.lineWidth = 1.5; x.beginPath(); x.ellipse(cx, cy, k * 9, k * 3.5, 0, 0, Math.PI * 2); x.stroke(); } }
+    grain(x, w, h, 16);
+  });
+  const woodMap = tex(woodC); woodMap.repeat.set(.22, .22); woodMap.offset.set(.5, .5);
+  const woodBump = tex(woodC, false); woodBump.repeat.copy(woodMap.repeat); woodBump.offset.copy(woodMap.offset);
+  const boardShape = new T.Shape(); boardShape.absarc(0, 0, 2.02, 0, Math.PI * 2, false);
+  const bg = new T.ExtrudeGeometry(boardShape, {depth: .1, bevelEnabled: true, bevelThickness: .035, bevelSize: .035, bevelSegments: 5, curveSegments: 128});
+  bg.rotateX(-Math.PI / 2);
+  const board = new T.Mesh(bg, new T.MeshStandardMaterial({map: woodMap, bumpMap: woodBump, bumpScale: .012, roughness: .58, color: 0xffffff}));
+  board.position.y = .035; board.castShadow = board.receiveShadow = true; world.add(board);
+  const TOP = .17; // верх доски
+
+  const pizza = new T.Group(); pizza.position.y = TOP; world.add(pizza);
+
+  // ---------- тесто и бортик ----------
+  const prof = [[0, .085], [1.2, .085], [1.3, .095], [1.38, .15], [1.46, .22], [1.54, .25], [1.61, .235], [1.66, .18], [1.685, .11], [1.67, .045], [1.6, .008], [1.45, 0], [0, 0]];
+  const dg = new T.LatheGeometry(prof.map(p => new T.Vector2(p[0], p[1])), 200, 0, Math.PI * 2);
+  (function () {
+    const p = dg.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+      let x = p.getX(i), y = p.getY(i), z = p.getZ(i); const r = Math.hypot(x, z), a = Math.atan2(z, x);
+      const k = 1 + .016 * Math.sin(3 * a + .5) + .011 * Math.sin(7 * a + 1.3) + .007 * Math.sin(13 * a);
+      x *= k; z *= k;
+      if (r > 1.25) {
+        const t = Math.min(1, (r - 1.25) / .3);
+        const b = (.034 * Math.sin(9 * a + 2) + .022 * Math.sin(17 * a) + .016 * Math.sin(31 * a + 1) + .01 * Math.sin(53 * a + 4)) * t;
+        y += b * (y > .05 ? 1 : .25); x *= 1 + b * .45; z *= 1 + b * .45;
+      }
+      p.setXYZ(i, x, y, z);
+    }
+    dg.computeVertexNormals();
+  })();
+  // развёртка: u — по кругу (2048 px ≈ 9.8 ед.), v — по профилю (rim ≈ v .25–.67)
+  const SX = .44;
+  const crustC = cv(2048, 512, (x, w, h) => {
+    const g = x.createLinearGradient(0, 0, 0, h);
+    [[0, "#c58f50"], [.22, "#d29b56"], [.33, "#d9a35a"], [.42, "#c98538"], [.52, "#bd722a"], [.62, "#cf8d3e"], [.72, "#e2b170"], [.82, "#edd2a2"], [1, "#efd7aa"]].forEach(s => g.addColorStop(s[0], s[1]));
+    x.fillStyle = g; x.fillRect(0, 0, w, h);
+    for (let i = 0; i < 900; i++) { const cx = R() * w, cy = h * (.3 + R() * .45); spot(x, cx, cy, 6 + R() * 22, R() < .5 ? "236,196,130" : "170,100,40", .12 + R() * .18, SX); }
+    for (let i = 0; i < 260; i++) { // «леопардовые» подпалины
+      const cx = R() * w, cy = h * (.36 + Math.pow(R(), 1.3) * .3), r = 4 + Math.pow(R(), 2) * 22;
+      for (const dx of [0, -w, w]) { spot(x, cx + dx, cy, r * 2.2, "120,58,18", .22, SX); spot(x, cx + dx, cy, r, "38,18,6", .55 + R() * .35, SX); }
+    }
+    for (let i = 0; i < 1600; i++) { x.fillStyle = `rgba(250,240,220,${.25 + R() * .4})`; x.fillRect(R() * w, h * (.25 + R() * .55), 1 + R() * 2, 1); }
+    grain(x, w, h, 12);
+  });
+  const crustBumpC = cv(1024, 256, (x, w, h) => {
+    x.fillStyle = "#808080"; x.fillRect(0, 0, w, h);
+    for (let i = 0; i < 1400; i++) spot(x, R() * w, R() * h, 2 + R() * 10, R() < .7 ? "255,255,255" : "0,0,0", .25 + R() * .3, SX);
+    grain(x, w, h, 40);
+  });
+  const dough = new T.Mesh(dg, new T.MeshStandardMaterial({map: tex(crustC), bumpMap: tex(crustBumpC, false), bumpScale: .035, roughness: .82, color: 0xffffff}));
+  dough.castShadow = dough.receiveShadow = true; pizza.add(dough);
+
+  // ---------- томатный соус ----------
+  const sauceShape = new T.Shape();
+  for (let k = 0; k <= 240; k++) { const a = k / 240 * Math.PI * 2, r = 1.29 + .03 * Math.sin(5 * a + 1) + .02 * Math.sin(11 * a + 3) + .012 * Math.sin(23 * a); const X = Math.cos(a) * r, Y = Math.sin(a) * r; k ? sauceShape.lineTo(X, Y) : sauceShape.moveTo(X, Y); }
+  const sgeo = new T.ShapeGeometry(sauceShape); sgeo.rotateX(-Math.PI / 2);
+  const sauceC = cv(1024, 1024, (x, w, h) => {
+    x.fillStyle = "#a3200f"; x.fillRect(0, 0, w, h);
+    for (let i = 0; i < 260; i++) spot(x, R() * w, R() * h, 20 + R() * 90, "205,62,24", .18 + R() * .22);
+    for (let i = 0; i < 160; i++) spot(x, R() * w, R() * h, 10 + R() * 50, "112,12,4", .2 + R() * .25);
+    for (let i = 0; i < 260; i++) spot(x, R() * w, R() * h, 3 + R() * 9, "245,150,50", .35 + R() * .3);   // капли масла
+    for (let i = 0; i < 700; i++) { x.fillStyle = `rgba(${R() < .5 ? "70,8,2" : "235,120,60"},${.3 + R() * .4})`; x.beginPath(); x.ellipse(R() * w, R() * h, 1 + R() * 2.5, 1 + R() * 1.5, R() * 3, 0, 7); x.fill(); }
+    grain(x, w, h, 10);
+  });
+  const sauceMap = tex(sauceC); sauceMap.repeat.set(.37, .37); sauceMap.offset.set(.5, .5);
+  const sauceBump = tex(cv(512, 512, (x, w, h) => { x.fillStyle = "#808080"; x.fillRect(0, 0, w, h); for (let i = 0; i < 900; i++) spot(x, R() * w, R() * h, 3 + R() * 14, R() < .5 ? "255,255,255" : "0,0,0", .3); }), false);
+  sauceBump.repeat.copy(sauceMap.repeat); sauceBump.offset.copy(sauceMap.offset);
+  const sauce = new T.Mesh(sgeo, new T.MeshPhysicalMaterial({map: sauceMap, bumpMap: sauceBump, bumpScale: .012, roughness: .34, clearcoat: .55, clearcoatRoughness: .28, color: 0xffffff}));
+  sauce.position.y = .087; sauce.receiveShadow = true; pizza.add(sauce);
+
+  // ---------- моцарелла ----------
+  const mozzC = cv(512, 512, (x, w, h) => {
+    x.fillStyle = "#f8f1df"; x.fillRect(0, 0, w, h);
+    for (let i = 0; i < 70; i++) spot(x, R() * w, R() * h, 8 + R() * 40, "222,170,80", .18 + R() * .3);
+    for (let i = 0; i < 40; i++) spot(x, R() * w, R() * h, 3 + R() * 10, "160,95,35", .3 + R() * .3);
+    for (let i = 0; i < 90; i++) spot(x, R() * w, R() * h, 6 + R() * 18, "255,255,255", .5);
+    grain(x, w, h, 8);
+  });
+  const mozzMat = new T.MeshPhysicalMaterial({map: tex(mozzC), roughness: .3, clearcoat: .4, clearcoatRoughness: .35, color: 0xffffff});
+  function cheese(x, z, s, sx, sz, rot) {
+    const g = new T.SphereGeometry(1, 56, 28); const p = g.attributes.position; const ph = R() * 6;
+    for (let i = 0; i < p.count; i++) {
+      let X = p.getX(i), Y = p.getY(i), Z = p.getZ(i); const a = Math.atan2(Z, X);
+      const k = 1 + .14 * Math.sin(3 * a + ph) + .08 * Math.sin(5 * a + ph * 2) + .04 * Math.sin(9 * a + ph);
+      X *= k; Z *= k; Y = Y > 0 ? Y * .26 * (1 + .25 * Math.sin(4 * a + ph)) : Y * .02;
+      p.setXYZ(i, X, Y, Z);
+    }
+    g.computeVertexNormals();
+    const top = new T.Mesh(g, mozzMat); top.scale.set(s * sx, s, s * sz); top.position.set(x, .092, z); top.rotation.y = rot; top.castShadow = top.receiveShadow = true; pizza.add(top);
+    const pool = new T.Mesh(g, mozzMat); pool.scale.set(s * sx * 1.35, s * .25, s * sz * 1.35); pool.position.set(x, .089, z); pool.rotation.y = rot + .7; pool.receiveShadow = true; pizza.add(pool);
+  }
+  [[.05, .02, .34], [.62, .3, .3], [-.55, .42, .32], [.2, -.66, .31], [-.38, -.48, .27], [.78, -.32, .25], [-.86, -.08, .28], [.12, .82, .29], [-.2, .3, .2], [.95, .62, .18], [-.75, .85, .17], [.45, -.05, .17]]
+    .forEach(([x, z, s]) => cheese(x, z, s, .85 + R() * .35, .85 + R() * .35, R() * 6));
+
+  // ---------- базилик ----------
+  const leafC = cv(512, 256, (x, w, h) => {
+    const g = x.createLinearGradient(0, 0, w, 0); g.addColorStop(0, "#2f5e1c"); g.addColorStop(.5, "#3f7a25"); g.addColorStop(1, "#2a5418"); x.fillStyle = g; x.fillRect(0, 0, w, h);
+    const e = x.createLinearGradient(0, 0, 0, h); e.addColorStop(0, "rgba(20,45,10,.55)"); e.addColorStop(.25, "rgba(20,45,10,0)"); e.addColorStop(.75, "rgba(20,45,10,0)"); e.addColorStop(1, "rgba(20,45,10,.55)"); x.fillStyle = e; x.fillRect(0, 0, w, h);
+    x.strokeStyle = "rgba(170,210,120,.55)"; x.lineWidth = 5; x.beginPath(); x.moveTo(0, h / 2); x.lineTo(w, h / 2); x.stroke();
+    x.lineWidth = 2; x.strokeStyle = "rgba(150,200,100,.35)";
+    for (let i = 1; i < 9; i++) { const sx = i / 9 * w; for (const d of [-1, 1]) { x.beginPath(); x.moveTo(sx, h / 2); x.quadraticCurveTo(sx + 30, h / 2 + d * h * .25, sx + 60, h / 2 + d * h * .48); x.stroke(); } }
+    for (let i = 0; i < 18; i++) spot(x, R() * w, R() * h, 4 + R() * 14, "25,40,10", .25);
+    grain(x, w, h, 10);
+  });
+  const leafMat = new T.MeshPhysicalMaterial({map: tex(leafC), roughness: .4, clearcoat: .35, clearcoatRoughness: .3, side: T.DoubleSide, color: 0xffffff});
+  function leaf(len, wid, curl, mat = leafMat) {
+    const g = new T.PlaneGeometry(1, 1, 28, 14); const p = g.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+      const u = p.getX(i) + .5, v = p.getY(i) * 2;
+      const wd = wid * Math.pow(Math.sin(Math.PI * Math.pow(u, .75)), .85);
+      const X = u * len, Z = v * wd;
+      const Y = -curl * v * v * wd + .025 * len * (1 - Math.abs(v)) + .12 * len * Math.sin(Math.PI * u) * curl - .1 * len * u * u * curl;
+      p.setXYZ(i, X - len * .45, Y, Z);
+    }
+    g.computeVertexNormals();
+    const m = new T.Mesh(g, mat); m.castShadow = true; m.receiveShadow = true; return m;
+  }
+  [[-.1, .12, .2, .62], [.44, .55, 2.3, .55], [-.62, -.2, 4.1, .58], [.55, -.52, 5.4, .5], [-.35, .72, 1.1, .5], [.92, .05, 3.2, .46], [-.15, -.9, .6, .45]]
+    .forEach(([x, z, r, L], i) => { const l = leaf(L, L * .32, .55); l.position.set(x, .17 + (i % 2) * .02, z); l.rotation.set((R() - .5) * .15, r, (R() - .5) * .15); pizza.add(l); });
+
+  // ---------- орегано и оливковое масло ----------
+  const fl = new T.InstancedMesh(new T.BoxGeometry(.016, .004, .01), new T.MeshStandardMaterial({color: C("#3c4a1c"), roughness: .8}), 260); const d = new T.Object3D();
+  for (let i = 0; i < 260; i++) { const a = R() * 6.283, r = Math.sqrt(R()) * 1.25; d.position.set(Math.cos(a) * r, .1 + R() * .06, Math.sin(a) * r); d.rotation.set(R() * .5, R() * 6, R() * .5); d.scale.setScalar(.6 + R()); d.updateMatrix(); fl.setMatrixAt(i, d.matrix); }
+  pizza.add(fl);
+  const oil = new T.MeshPhysicalMaterial({color: C("#e2b22c"), roughness: .05, clearcoat: 1, transparent: true, opacity: .42});
+  for (let k = 0; k < 3; k++) {
+    const pts = []; const a0 = R() * 6, r0 = .3 + R() * .6;
+    for (let j = 0; j < 7; j++) { const a = a0 + j * .22, r = r0 + Math.sin(j * 1.7) * .12; pts.push(new T.Vector3(Math.cos(a) * r, .2, Math.sin(a) * r)); }
+    const tg = new T.TubeGeometry(new T.CatmullRomCurve3(pts), 60, .018, 6); tg.scale(1, .25, 1);
+    const o = new T.Mesh(tg, oil); o.position.y = -.03; pizza.add(o);
+  }
+
+  // ---------- черри на ветке и мука ----------
+  const tomMat = new T.MeshPhysicalMaterial({color: C("#c71f0c"), roughness: .22, clearcoat: 1, clearcoatRoughness: .08});
+  const stemMat = new T.MeshStandardMaterial({color: C("#4d6b22"), roughness: .6});
+  const calyxMat = new T.MeshStandardMaterial({color: C("#4f7a24"), roughness: .55, side: T.DoubleSide});
+  const vine = new T.Group(); vine.position.set(-2.35, 0, -1.25); vine.rotation.y = .5; world.add(vine);
+  const tps = [[0, 0], [.4, .12], [.18, .4]]; const tops = [];
+  tps.forEach(([x, z], i) => {
+    const s = .2 - i * .015; const t = new T.Mesh(new T.SphereGeometry(s, 48, 32), tomMat); t.scale.y = .88; t.position.set(x, s * .88, z); t.castShadow = t.receiveShadow = true; vine.add(t);
+    for (let k = 0; k < 5; k++) { const c = leaf(.13, .03, -.6, calyxMat); c.position.set(x, s * 1.74, z); c.rotation.set(0, k * 1.256, .35); c.children; vine.add(c); }
+    tops.push(new T.Vector3(x, s * 1.78, z));
+  });
+  const vpts = [new T.Vector3(.25, .62, .1), new T.Vector3(.2, .52, .15)];
+  tops.forEach(tp => { const c = new T.CatmullRomCurve3([vpts[0], new T.Vector3((vpts[0].x + tp.x) / 2, .5, (vpts[0].z + tp.z) / 2), tp]); const m = new T.Mesh(new T.TubeGeometry(c, 20, .015, 6), stemMat); m.castShadow = true; vine.add(m); });
+  const mainStem = new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3([vpts[0], new T.Vector3(.45, .68, -.05), new T.Vector3(.7, .66, -.25)]), 20, .02, 6), stemMat); mainStem.castShadow = true; vine.add(mainStem);
+
+  const flour = new T.InstancedMesh(new T.IcosahedronGeometry(.007, 0), new T.MeshStandardMaterial({color: C("#f3eee4"), roughness: .9}), 700);
+  for (let i = 0; i < 700; i++) {
+    const a = R() * 6.283, r = R() < .75 ? 1.72 + R() * .28 : 2.05 + Math.pow(R(), 2) * .9, y = r <= 2.02 ? TOP + .002 : .004;
+    d.position.set(Math.cos(a) * r, y, Math.sin(a) * r); d.rotation.set(R() * 3, R() * 3, R() * 3); d.scale.setScalar(.5 + R() * 1.3); d.updateMatrix(); flour.setMatrixAt(i, d.matrix);
+  }
+  world.add(flour);
+  // пара листиков базилика на доске
+  [[1.55, 1.1, 2.4], [1.75, .75, 2.9], [1.38, 1.38, 1.9]].forEach(([x, z, r]) => { const l = leaf(.5, .17, .5); l.position.set(x, TOP + .03, z); l.rotation.y = r; world.add(l); });
+
+  // ---------- пар ----------
+  const steamTex = tex(cv(128, 128, (x) => spot(x, 64, 64, 62, "255,255,255", .9)), false);
+  const steam = [];
+  if (!REDUCED) for (let i = 0; i < 16; i++) {
+    const sp = new T.Sprite(new T.SpriteMaterial({map: steamTex, transparent: true, opacity: 0, depthWrite: false}));
+    sp.userData = {t: R(), a: R() * 6.283, r: Math.sqrt(R()) * .9, sp: .0018 + R() * .0014, ph: R() * 6}; world.add(sp); steam.push(sp);
+  }
+
+  // ---------- камера и управление ----------
+  const view = {th: -.55, ph: .62, tTh: .35, tPh: .62, vTh: 0, d: 7};
+  let drag = null, lastInput = -1e9, intro = 0;
+  const target = new T.Vector3(0, .25, 0);
+  canvas.addEventListener("pointerdown", e => { drag = {x: e.clientX, y: e.clientY}; try { canvas.setPointerCapture(e.pointerId); } catch (_) {} canvas.classList.add("grabbing"); lastInput = performance.now(); });
+  canvas.addEventListener("pointermove", e => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag = {x: e.clientX, y: e.clientY}; view.tTh -= dx * .008; view.vTh = -dx * .008; view.tPh = Math.min(1.25, Math.max(.22, view.tPh + dy * .005)); lastInput = performance.now(); });
+  const up = () => { drag = null; canvas.classList.remove("grabbing"); };
+  canvas.addEventListener("pointerup", up); canvas.addEventListener("pointercancel", up);
+  canvas.addEventListener("keydown", e => { const k = {ArrowLeft: [.25, 0], ArrowRight: [-.25, 0], ArrowUp: [0, .08], ArrowDown: [0, -.08]}[e.key]; if (!k) return; e.preventDefault(); view.tTh += k[0]; view.tPh = Math.min(1.25, Math.max(.22, view.tPh + k[1])); lastInput = performance.now(); });
+  window.heroResetView = () => { view.tTh = .35 + Math.round((view.th - .35) / (Math.PI * 2)) * Math.PI * 2; view.tPh = .62; view.vTh = 0; lastInput = performance.now(); };
+
+  function resize() {
+    const w = canvas.clientWidth, h = canvas.clientHeight; if (!w || !h) return;
+    renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix();
+    view.d = Math.max(6.4, 4.9 / (2 * Math.tan(T.MathUtils.degToRad(15)) * cam.aspect));
+  }
+  new ResizeObserver(resize).observe(canvas); resize();
+
+  let running = false, raf = 0, last = performance.now();
+  const ease = t => 1 - Math.pow(1 - t, 3);
+  function frame(now) {
+    const dt = Math.min(50, now - last); last = now;
+    if (intro < 1) { intro = Math.min(1, intro + dt / (REDUCED ? 1 : 1400)); const e = ease(intro); world.position.y = (1 - e) * .5; world.scale.setScalar(.88 + .12 * e); }
+    if (!drag) {
+      if (Math.abs(view.vTh) > .0004) { view.tTh += view.vTh; view.vTh *= .93; }
+      else if (!REDUCED && now - lastInput > 3500) view.tTh += dt * .00009;
+    }
+    view.th += (view.tTh - view.th) * .09; view.ph += (view.tPh - view.ph) * .09;
+    const cp = Math.cos(view.ph);
+    cam.position.set(target.x + Math.sin(view.th) * cp * view.d, target.y + Math.sin(view.ph) * view.d, target.z + Math.cos(view.th) * cp * view.d);
+    cam.lookAt(target);
+    for (const s of steam) {
+      const u = s.userData; u.t += u.sp * dt * .06; if (u.t > 1) { u.t = 0; u.a = R() * 6.283; u.r = Math.sqrt(R()) * .9; }
+      s.position.set(Math.cos(u.a) * u.r + Math.sin(u.t * 4 + u.ph) * .15, TOP + .35 + u.t * 1.6, Math.sin(u.a) * u.r);
+      s.material.opacity = Math.sin(Math.PI * u.t) * .1; s.scale.setScalar(.5 + u.t * 1.3);
+    }
+    renderer.render(scene, cam);
+    if (running) raf = requestAnimationFrame(frame);
+  }
+  const start = () => { if (running) return; running = true; last = performance.now(); raf = requestAnimationFrame(frame); };
+  const stop = () => { running = false; cancelAnimationFrame(raf); };
+  let visible = true;
+  new IntersectionObserver(es => { visible = es[0].isIntersecting; visible && !document.hidden ? start() : stop(); }).observe(canvas);
+  document.addEventListener("visibilitychange", () => (visible && !document.hidden ? start() : stop()));
+  window.heroPause = p => (p ? stop() : visible && start());
+  canvas.parentElement.classList.add("ready");
+  start();
+})();
+
+</script>
+</body>
+</html>
